@@ -31,6 +31,25 @@ th{background:#3498db;color:#fff}
   nav button{flex:1 1 100%; font-size:18px;}
   input,textarea,select,button.action{font-size:18px;}
   .grade{font-size:16px;}
+  /* 1. Направи таблицата да се разтяга по ширината на контейнера и да се скролира */
+.table-wrapper {
+  overflow-x: auto; /* позволява хоризонтално скролиране */
+  -webkit-overflow-scrolling: touch; /* по-гладко скролиране на iOS */
+}
+
+/* 2. Таблицата да използва auto layout вместо fixed */
+.table-wrapper table {
+  table-layout: auto; /* авто ширина за клетки */
+  width: 100%;        /* заема цялата ширина на контейнера */
+}
+
+/* 3. Намали шрифта на таблицата за малки екрани */
+@media (max-width: 600px) {
+  table, th, td {
+    font-size: 14px;
+  }
+}
+
 }
 </style>
 </head>
@@ -355,3 +374,4 @@ show("login");
 </script>
 </body>
 </html>
+
