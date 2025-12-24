@@ -97,8 +97,7 @@ th{background:#3498db;color:white;}
   <h3>Седмична програма</h3>
   <input id="subjectName" placeholder="Предмет">
   <input id="subjectHours" type="number" placeholder="Часове седмично">
-  <button class="action" onclick="addSubject()">Добави предмет</button>
-  <button class="action" onclick="generateProgram()">Създай програма</button>
+  <button class="action" onclick="addSubject()">Добави / Редактирай предмет</button>
 
   <table>
     <thead><tr><th>Час</th><th>Ден 1</th><th>Ден 2</th><th>Ден 3</th></tr></thead>
@@ -111,16 +110,15 @@ th{background:#3498db;color:white;}
 <script>
 // ---------- FIREBASE CONFIG ----------
 const firebaseConfig = {
-  apiKey: "AIzaSyBXvPOKgRLZhr1Zel8tDHl-RYIOB24DZMs",
-  authDomain: "dnevnik-4a16a.firebaseapp.com",
-  databaseURL: "https://dnevnik-4a16a-default-rtdb.firebaseio.com",
-  projectId: "dnevnik-4a16a",
-  storageBucket: "dnevnik-4a16a.appspot.com",
-  messagingSenderId: "618346223474",
-  appId: "1:618346223474:web:5cb84c7c4bec1871b0afeb"
+  apiKey: "ВАШИЯ_API_KEY",
+  authDomain: "ВАШИЯ_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://ВАШИЯ_PROJECT_ID.firebaseio.com",
+  projectId: "ВАШИЯ_PROJECT_ID",
+  storageBucket: "ВАШИЯ_PROJECT_ID.appspot.com",
+  messagingSenderId: "ВАШИЯ_MESSAGING_ID",
+  appId: "ВАШИЯ_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.database();
 
@@ -131,7 +129,7 @@ let program = [];
 
 // ---------- SHOW SECTION ----------
 function showSection(id){
-  if(!currentUid) return alert("Моля, влезте!");
+  if(id !== 'authSection' && !currentUid) return alert("Моля, влезте!");
   document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
   updateSubjectSelect();
@@ -147,8 +145,18 @@ function registerUser(){
   if(!email || !pass) return alert("Попълни email и парола");
 
   auth.createUserWithEmailAndPassword(email, pass)
-      .then(u=> loginAfter(u.user.uid))
-      .catch(err=> alert(err.message));
+      .then(u => {
+          currentUid = u.user.uid;
+          students = {};
+          subjects = [];
+          program = [];
+          db.ref("diary/" + currentUid).set({students, subjects, program})
+            .then(() => {
+                alert("Регистрация успешна!");
+                loginAfter(currentUid);
+            });
+      })
+      .catch(err => alert(err.message));
 }
 
 function loginUser(){
@@ -181,6 +189,11 @@ function loadData(){
       students = val.students||{};
       subjects = val.subjects||[];
       program  = val.program||[];
+    } else {
+      students = {};
+      subjects = [];
+      program  = [];
+      db.ref("diary/"+currentUid).set({students, subjects, program});
     }
     updateSubjectSelect();
     renderDiary();
@@ -197,8 +210,8 @@ function saveData(){
 // ---------- STUDENTS ----------
 function addStudent(){
   let n = newStudent.value.trim();
-  if(!n || students[n]) return alert("Невалидно или съществуващо име");
-  students[n]={};
+  if(!n) return alert("Невалидно име");
+  if(!students[n]) students[n]={};
   subjects.forEach(s=> students[n][s.name]={grades:[], remarks:[], praises:[]});
   newStudent.value="";
   saveData();
@@ -213,12 +226,7 @@ function updateStudentList(){
     div.textContent=st;
     let btn = document.createElement("button");
     btn.textContent="Премахни";
-    btn.onclick=()=>{
-      delete students[st];
-      saveData();
-      renderDiary();
-      updateStudentList();
-    };
+    btn.onclick=()=>{delete students[st]; saveData(); renderDiary(); updateStudentList();}
     div.appendChild(btn);
     studentList.appendChild(div);
   }
@@ -229,14 +237,22 @@ function addSubject(){
   let n = subjectName.value.trim();
   let h = +subjectHours.value;
   if(!n || !h) return alert("Попълни предмет и часове");
-  subjects.push({name:n,hours:h});
-  for(let st in students) students[st][n]={grades:[], remarks:[], praises:[]};
+  
+  // ако съществува, редактираме часовете
+  let exists = subjects.find(s=>s.name===n);
+  if(exists) { exists.hours = h; }
+  else { subjects.push({name:n,hours:h}); }
+
+  for(let st in students){
+    if(!students[st][n]) students[st][n]={grades:[], remarks:[], praises:[]};
+  }
   subjectName.value=subjectHours.value="";
   saveData();
   updateSubjectSelect();
   renderDiary();
 }
 
+// ---------- SUBJECT SELECT ----------
 function updateSubjectSelect(){
   entrySubject.innerHTML=subjects.map(s=>`<option>${s.name}</option>`).join("");
 }
@@ -244,14 +260,10 @@ function updateSubjectSelect(){
 // ---------- PROGRAM ----------
 function generateProgram(){
   let pool=[];
-  subjects.forEach(s=>{
-    for(let i=0;i<s.hours;i++) pool.push(s.name);
-  });
+  subjects.forEach(s=>{for(let i=0;i<s.hours;i++) pool.push(s.name);});
   pool.sort(()=>Math.random()-0.5);
   program=[];
-  for(let h=0;h<6;h++){
-    program[h]=[pool.pop()||"", pool.pop()||"", pool.pop()||""];
-  }
+  for(let h=0;h<6;h++){ program[h]=[pool.pop()||"", pool.pop()||"", pool.pop()||""]; }
   saveData();
   renderProgram();
 }
@@ -267,10 +279,7 @@ function renderProgram(){
 }
 
 // ---------- INPUT ----------
-entryType.onchange=()=>{
-  gradeBox.classList.toggle("hidden", entryType.value!=="grade");
-  textValue.classList.toggle("hidden", entryType.value==="grade");
-};
+entryType.onchange=()=>{gradeBox.classList.toggle("hidden", entryType.value!=="grade"); textValue.classList.toggle("hidden", entryType.value==="grade");};
 
 function addEntry(){
   let st = entryStudent.value.trim();
@@ -278,13 +287,9 @@ function addEntry(){
   if(!students[st]) return alert("Няма такъв ученик");
   let box = students[st][sub];
 
-  if(entryType.value==="grade"){
-    box.grades.push({value:+gradeValue.value, author:gradeAuthor.value, reason:gradeReason.value});
-  } else if(entryType.value==="remark"){
-    box.remarks.push(textValue.value);
-  } else {
-    box.praises.push(textValue.value);
-  }
+  if(entryType.value==="grade"){ box.grades.push({value:+gradeValue.value, author:gradeAuthor.value, reason:gradeReason.value}); }
+  else if(entryType.value==="remark"){ box.remarks.push(textValue.value); }
+  else { box.praises.push(textValue.value); }
 
   gradeValue.value=gradeAuthor.value=gradeReason.value=textValue.value="";
   saveData();
@@ -318,6 +323,6 @@ function renderDiary(){
 // ---------- INIT ----------
 showSection('authSection');
 </script>
-
 </body>
 </html>
+
