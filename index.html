@@ -3,41 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Електронен дневник</title>
+<title>Електронен училищен дневник</title>
 <style>
-body{margin:0;font-family:Arial;background:#f2f4f7}
-header{background:#2c3e50;color:#fff;padding:15px;text-align:center;font-size:22px;word-break:break-word;}
-nav{display:flex;flex-wrap:wrap;background:#34495e}
-nav button{flex:1 1 50%;padding:12px;border:none;background:none;color:#fff;cursor:pointer;font-size:16px}
-nav button:hover{background:#2c3e50}
-.container{padding:15px}
-.hidden{display:none}
-.card{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);margin-bottom:20px;overflow-x:auto}
-input,textarea,select,button.action{width:100%;padding:8px;margin:6px 0;box-sizing:border-box;font-size:16px}
-button.action{background:#3498db;color:#fff;border:none;padding:10px;border-radius:5px;cursor:pointer}
-button.action:hover{background:#2980b9}
-table{width:100%;border-collapse:collapse;margin-top:10px;table-layout:fixed;word-wrap:break-word;}
-th,td{border:1px solid #ddd;padding:6px;text-align:center;vertical-align:top}
-th{background:#3498db;color:#fff}
-.grade{display:inline-block;padding:3px 6px;border-radius:4px;color:#fff;font-weight:bold;margin:2px;cursor:pointer;font-size:14px}
-.small{text-align:left;font-size:12px;word-break:break-word;}
-.avg{margin-top:4px;padding:4px;background:#ecf0f1;border-radius:4px;font-size:12px;word-break:break-word;}
-.table-wrapper{overflow-x:auto;max-width:100%}
-.table-wrapper table{min-width:600px;}
-.subjectItem{margin:4px 0;display:flex;justify-content:space-between;align-items:center;}
-.subjectItem button, .studentItem button{margin-left:10px;padding:4px 8px;font-size:14px;flex-shrink:0;}
-.studentItem{margin:4px 0;display:flex;justify-content:space-between;align-items:center;}
-@media (max-width:600px){
-  nav button{flex:1 1 100%; font-size:18px;}
-  input,textarea,select,button.action{font-size:18px;}
-  .grade{font-size:16px;}
-  .table-wrapper {overflow-x:auto;-webkit-overflow-scrolling: touch;}
-  .table-wrapper table {table-layout:auto;width:100%;}
-  table, th, td {font-size:14px;}
-}
+body{margin:0;font-family:Arial;background:#f2f4f7;}
+header{background:#2c3e50;color:white;padding:15px;text-align:center;font-size:22px;}
+nav{display:flex;flex-wrap:wrap;background:#34495e;}
+nav button{flex:1;padding:12px;background:none;border:none;color:white;cursor:pointer;font-size:16px;}
+nav button:hover{background:#2c3e50;}
+.hidden{display:none;}
+.container{padding:15px;}
+.card{background:white;padding:20px;border-radius:8px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+input,select,textarea,button{width:100%;padding:8px;margin:6px 0;border-radius:5px;border:1px solid #ccc;}
+button.action{background:#3498db;color:white;border:none;cursor:pointer;padding:10px;}
+button.action:hover{background:#2980b9;}
+.table-wrap{overflow-x:auto;}
+table{border-collapse:collapse;width:100%;}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;}
+th{background:#3498db;color:white;}
+.grade{display:inline-block;padding:4px 7px;border-radius:5px;color:white;font-weight:bold;margin:2px;cursor:pointer;}
 </style>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
@@ -45,239 +33,291 @@ th{background:#3498db;color:#fff}
 <header>📘 Електронен училищен дневник</header>
 
 <nav>
-<button onclick="show('students')">➕ Ученик</button>
-<button onclick="show('input')">✍️ Въвеждане</button>
-<button onclick="show('diary')">📊 Дневник</button>
-<button onclick="show('program')">📅 Програма</button>
+<button onclick="showSection('students')">Ученици</button>
+<button onclick="showSection('input')">Въвеждане</button>
+<button onclick="showSection('diary')">Дневник</button>
+<button onclick="showSection('program')">Програма</button>
+<button onclick="logout()">Изход</button>
 </nav>
 
 <div class="container">
 
-<!-- LOGIN -->
-<div id="login" class="card">
-  <h3>Вход в акаунт</h3>
-  <input id="accountName" placeholder="Име на акаунт">
-  <button class="action" onclick="login()">Вход / Регистрация</button>
+<!-- LOGIN / REGISTER -->
+<div id="authSection" class="card">
+  <h3>Регистрация / Вход</h3>
+  <input id="authEmail" placeholder="Имейл" type="email">
+  <input id="authPass" placeholder="Парола" type="password">
+  <button class="action" onclick="registerUser()">Регистрация</button>
+  <button class="action" onclick="loginUser()">Вход</button>
 </div>
 
 <!-- УЧЕНИЦИ -->
 <div id="students" class="card hidden">
-<h3>Добавяне на ученик</h3>
-<input id="newStudent" placeholder="Име на ученик">
-<button class="action" onclick="addStudent()">Добави</button>
-<div id="studentList"></div>
+  <h3>Добави ученик</h3>
+  <input id="newStudent" placeholder="Име на ученик">
+  <button class="action" onclick="addStudent()">Добави</button>
+  <div id="studentList"></div>
 </div>
 
 <!-- ВЪВЕЖДАНЕ -->
 <div id="input" class="card hidden">
-<h3>Въвеждане</h3>
+  <h3>Въвеждане</h3>
+  <select id="entryType">
+    <option value="grade">Оценка</option>
+    <option value="remark">Забележка</option>
+    <option value="praise">Похвала</option>
+  </select>
+  <input id="entryStudent" placeholder="Ученик">
+  <select id="entrySubject"></select>
 
-<select id="entryType">
-<option value="grade">Оценка</option>
-<option value="remark">Забележка</option>
-<option value="praise">Похвала</option>
-</select>
+  <div id="gradeBox">
+    <input id="gradeValue" type="number" placeholder="Оценка (2-6)">
+    <input id="gradeAuthor" placeholder="От кого">
+    <input id="gradeReason" placeholder="Основание">
+  </div>
 
-<input id="entryStudent" placeholder="Ученик">
-<select id="entrySubject"></select>
+  <textarea id="textValue" class="hidden" placeholder="Текст"></textarea>
 
-<div id="gradeBox">
-<input id="gradeValue" type="number" min="2" max="6" placeholder="Оценка">
-<input id="gradeAuthor" placeholder="От кого">
-<input id="gradeReason" placeholder="Основание">
-</div>
-
-<textarea id="textValue" class="hidden" placeholder="Текст"></textarea>
-
-<button class="action" onclick="addEntry()">Запази</button>
+  <button class="action" onclick="addEntry()">Запази</button>
 </div>
 
 <!-- ДНЕВНИК -->
 <div id="diary" class="card hidden">
-<h3>Дневник</h3>
-<div class="table-wrapper">
-<table>
-<thead id="diaryHead"></thead>
-<tbody id="diaryBody"></tbody>
-</table>
-</div>
+  <h3>Дневник</h3>
+  <div class="table-wrap">
+    <table>
+      <thead id="diaryHead"></thead>
+      <tbody id="diaryBody"></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- ПРОГРАМА -->
 <div id="program" class="card hidden">
-<h3>Седмична програма</h3>
+  <h3>Седмична програма</h3>
+  <input id="subjectName" placeholder="Предмет">
+  <input id="subjectHours" type="number" placeholder="Часове седмично">
+  <button class="action" onclick="addSubject()">Добави предмет</button>
+  <button class="action" onclick="generateProgram()">Създай програма</button>
 
-<input id="subjectName" placeholder="Предмет">
-<input id="subjectHours" type="number" min="1" placeholder="Часа седмично">
-<button class="action" onclick="addSubject()">Добави предмет</button>
-
-<div id="hoursInfo" style="margin:10px 0;font-weight:bold"></div>
-<div id="subjectList"></div>
-
-<button class="action" onclick="generateProgram()">Създай програма</button>
-
-<table>
-<thead>
-<tr>
-<th>Час</th>
-<th>Ден 1</th>
-<th>Ден 2</th>
-<th>Ден 3</th>
-</tr>
-</thead>
-<tbody id="programTable"></tbody>
-</table>
+  <table>
+    <thead><tr><th>Час</th><th>Ден 1</th><th>Ден 2</th><th>Ден 3</th></tr></thead>
+    <tbody id="programTable"></tbody>
+  </table>
 </div>
 
 </div>
 
 <script>
-// Firebase конфигурация (вмъкни твоите ключове)
+// ---------- FIREBASE CONFIG ----------
 const firebaseConfig = {
-  apiKey: "ТВОЯ_API_KEY",
-  authDomain: "ТВОЯ_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://ТВОЯ_PROJECT_ID.firebaseio.com",
-  projectId: "ТВОЯ_PROJECT_ID"
+  apiKey: "AIzaSyBXvPOKgRLZhr1Zel8tDHl-RYIOB24DZMs",
+  authDomain: "dnevnik-4a16a.firebaseapp.com",
+  databaseURL: "https://dnevnik-4a16a-default-rtdb.firebaseio.com",
+  projectId: "dnevnik-4a16a",
+  storageBucket: "dnevnik-4a16a.appspot.com",
+  messagingSenderId: "618346223474",
+  appId: "1:618346223474:web:5cb84c7c4bec1871b0afeb"
 };
 firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
 const db = firebase.database();
 
-// Данни
-let currentAccount=null;
-let students={}, subjects=[];
+let currentUid = null;
+let students = {};
+let subjects = [];
+let program = [];
 
-// ---------- SHOW ----------
-function show(id){
-  if(!currentAccount) return alert("Моля, влезте в акаунт!");
-  document.querySelectorAll('.card').forEach(c=>{if(c.id!=="login") c.classList.add('hidden');});
+// ---------- SHOW SECTION ----------
+function showSection(id){
+  if(!currentUid) return alert("Моля, влезте!");
+  document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
-  updateSubjectSelect(); renderDiary(); updateSubjectList(); updateStudentList();
+  updateSubjectSelect();
+  renderDiary();
+  renderProgram();
+  updateStudentList();
 }
 
-// ---------- LOGIN / REGISTRATION ----------
-function login(){
-  let name = accountName.value.trim();
-  if(!name) return alert("Въведете име на акаунт");
-  currentAccount = name;
-  db.ref("accounts/"+currentAccount).get().then(snapshot=>{
-    if(snapshot.exists()){
-      students = snapshot.val().students || {};
-      subjects = snapshot.val().subjects || [];
-    } else {
-      students = {};
-      subjects = [];
-      db.ref("accounts/"+currentAccount).set({students:{},subjects:[]});
+// ---------- AUTH ----------
+function registerUser(){
+  let email = authEmail.value.trim();
+  let pass  = authPass.value.trim();
+  if(!email || !pass) return alert("Попълни email и парола");
+
+  auth.createUserWithEmailAndPassword(email, pass)
+      .then(u=> loginAfter(u.user.uid))
+      .catch(err=> alert(err.message));
+}
+
+function loginUser(){
+  let email = authEmail.value.trim();
+  let pass  = authPass.value.trim();
+  if(!email || !pass) return alert("Попълни email и парола");
+
+  auth.signInWithEmailAndPassword(email, pass)
+      .then(u=> loginAfter(u.user.uid))
+      .catch(err=> alert(err.message));
+}
+
+function loginAfter(uid){
+  currentUid = uid;
+  authSection.classList.add('hidden');
+  showSection('students');
+  loadData();
+}
+
+function logout(){
+  auth.signOut();
+  location.reload();
+}
+
+// ---------- LOAD / SAVE ----------
+function loadData(){
+  db.ref("diary/"+currentUid).once("value", snap=>{
+    let val = snap.val();
+    if(val){
+      students = val.students||{};
+      subjects = val.subjects||[];
+      program  = val.program||[];
     }
-    document.getElementById("login").classList.add("hidden");
-    show("students");
+    updateSubjectSelect();
+    renderDiary();
+    renderProgram();
+    updateStudentList();
   });
 }
 
-// ---------- SAVE ----------
 function saveData(){
-  if(!currentAccount) return;
-  db.ref("accounts/"+currentAccount).set({students,subjects});
+  if(!currentUid) return;
+  db.ref("diary/"+currentUid).set({students, subjects, program});
 }
 
-// ---------- Ученици ----------
+// ---------- STUDENTS ----------
 function addStudent(){
-  let n=newStudent.value.trim();
-  if(!n || students[n]) return;
-  students[n]={subjects:{}};
-  subjects.forEach(s=>{students[n].subjects[s.name]={grades:[],remarks:[],praises:[]};});
+  let n = newStudent.value.trim();
+  if(!n || students[n]) return alert("Невалидно или съществуващо име");
+  students[n]={};
+  subjects.forEach(s=> students[n][s.name]={grades:[], remarks:[], praises:[]});
   newStudent.value="";
-  renderDiary(); updateStudentList(); saveData();
+  saveData();
+  renderDiary();
+  updateStudentList();
 }
 
 function updateStudentList(){
   studentList.innerHTML="";
   for(let st in students){
-    let div=document.createElement("div");
-    div.className="studentItem"; div.textContent=st;
-    let btn=document.createElement("button"); btn.textContent="Премахни";
-    btn.onclick=()=>{delete students[st]; renderDiary(); updateStudentList(); saveData();};
-    div.appendChild(btn); studentList.appendChild(div);
+    let div = document.createElement("div");
+    div.textContent=st;
+    let btn = document.createElement("button");
+    btn.textContent="Премахни";
+    btn.onclick=()=>{
+      delete students[st];
+      saveData();
+      renderDiary();
+      updateStudentList();
+    };
+    div.appendChild(btn);
+    studentList.appendChild(div);
   }
 }
 
-// ---------- Предмети ----------
+// ---------- SUBJECTS ----------
 function addSubject(){
-  let name=subjectName.value.trim();
-  let hours=parseInt(subjectHours.value);
-  if(!name || hours<1) return;
-  subjects.push({name,hours});
-  for(let st in students){students[st].subjects[name]={grades:[],remarks:[],praises:[]};}
+  let n = subjectName.value.trim();
+  let h = +subjectHours.value;
+  if(!n || !h) return alert("Попълни предмет и часове");
+  subjects.push({name:n,hours:h});
+  for(let st in students) students[st][n]={grades:[], remarks:[], praises:[]};
   subjectName.value=subjectHours.value="";
-  updateSubjectSelect(); updateSubjectList(); renderDiary(); updateHoursInfo(); saveData();
+  saveData();
+  updateSubjectSelect();
+  renderDiary();
 }
 
-function updateHoursInfo(){
-  hoursInfo.textContent="Общо часове: "+subjects.reduce((a,b)=>a+b.hours,0);
+function updateSubjectSelect(){
+  entrySubject.innerHTML=subjects.map(s=>`<option>${s.name}</option>`).join("");
 }
 
-function updateSubjectSelect(){ entrySubject.innerHTML=subjects.map(s=>`<option>${s.name}</option>`).join(""); }
-
-function updateSubjectList(){
-  subjectList.innerHTML="";
-  subjects.forEach((s,i)=>{
-    let div=document.createElement("div"); div.className="subjectItem";
-    div.textContent=`${s.name} - ${s.hours} часа`;
-    let btn=document.createElement("button"); btn.textContent="Премахни";
-    btn.onclick=()=>{subjects.splice(i,1); for(let st in students) delete students[st].subjects[s.name]; updateSubjectSelect(); updateSubjectList(); renderDiary(); saveData();};
-    div.appendChild(btn); subjectList.appendChild(div);
-  });
-}
-
-// ---------- Въвеждане ----------
-entryType.onchange=()=>{ gradeBox.classList.toggle("hidden",entryType.value!=="grade"); textValue.classList.toggle("hidden",entryType.value==="grade"); };
-
-function addEntry(){
-  let st=entryStudent.value, sub=entrySubject.value;
-  if(!students[st]) return alert("Няма такъв ученик");
-  let box=students[st].subjects[sub];
-  if(entryType.value==="grade") box.grades.push({value:+gradeValue.value,author:gradeAuthor.value,reason:gradeReason.value});
-  else if(entryType.value==="remark") box.remarks.push(textValue.value);
-  else box.praises.push(textValue.value);
-  gradeValue.value=gradeAuthor.value=gradeReason.value=textValue.value="";
-  renderDiary(); saveData();
-}
-
-// ---------- Дневник ----------
-function gradeColor(v){return {2:"#c0392b",3:"#e67e22",4:"#f1c40f",5:"#3498db",6:"#2ecc71"}[v];}
-function showGradeInfo(g){alert(`Оценка: ${g.value}\nОт: ${g.author}\nОснование: ${g.reason}`);}
-function average(arr){if(arr.length===0)return "—"; return (arr.reduce((a,b)=>a+b.value,0)/arr.length).toFixed(2);}
-
-function renderDiary(){
-  diaryHead.innerHTML=""; diaryBody.innerHTML=""; if(subjects.length===0) return;
-  let h1="<tr><th rowspan='2'>Ученик</th>"; subjects.forEach(s=>h1+=`<th colspan='3'>${s.name}</th>`); h1+="</tr>";
-  let h2="<tr>"; subjects.forEach(()=>h2+="<th>Оценки</th><th>Забележки</th><th>Похвали</th>"); h2+="</tr>";
-  diaryHead.innerHTML=h1+h2;
-  for(let st in students){
-    let row=`<tr><td><b>${st}</b></td>`;
-    subjects.forEach(s=>{
-      let b=students[st].subjects[s.name];
-      row+=`<td>${b.grades.map(g=>`<span class="grade" style="background:${gradeColor(g.value)}" onclick='showGradeInfo(${JSON.stringify(g)})'>${g.value}</span>`).join("")||"-"}<div class="avg">Среден: ${average(b.grades)}</div></td>`;
-      row+=`<td class="small"><b>З (${b.remarks.length})</b><br>${b.remarks.map(r=>"• "+r).join("<br>")||"-"}</td>`;
-      row+=`<td class="small"><b>П (${b.praises.length})</b><br>${b.praises.map(p=>"• "+p).join("<br>")||"-"}</td>`;
-    });
-    row+="</tr>"; diaryBody.innerHTML+=row;
-  }
-}
-
-// ---------- Програма ----------
+// ---------- PROGRAM ----------
 function generateProgram(){
-  if(subjects.length===0) return alert("Добавете поне един предмет!");
-  let pool=[]; subjects.forEach(s=>{for(let i=0;i<s.hours;i++) pool.push(s.name);}); pool.sort(()=>Math.random()-0.5);
-  programTable.innerHTML="";
-  for(let h=1;h<=6;h++){
-    let row=`<tr><td>${h}</td>`;
-    for(let d=0;d<3;d++){ let subj=pool.shift()||""; row+=`<td>${subj}</td>`; }
-    row+="</tr>"; programTable.innerHTML+=row;
+  let pool=[];
+  subjects.forEach(s=>{
+    for(let i=0;i<s.hours;i++) pool.push(s.name);
+  });
+  pool.sort(()=>Math.random()-0.5);
+  program=[];
+  for(let h=0;h<6;h++){
+    program[h]=[pool.pop()||"", pool.pop()||"", pool.pop()||""];
   }
   saveData();
+  renderProgram();
 }
 
-show("login");
+function renderProgram(){
+  let t="";
+  for(let i=0;i<6;i++){
+    t+=`<tr><td>${i+1}</td>`;
+    for(let d=0;d<3;d++) t+=`<td>${program[i]?.[d]||""}</td>`;
+    t+="</tr>";
+  }
+  programTable.innerHTML=t;
+}
+
+// ---------- INPUT ----------
+entryType.onchange=()=>{
+  gradeBox.classList.toggle("hidden", entryType.value!=="grade");
+  textValue.classList.toggle("hidden", entryType.value==="grade");
+};
+
+function addEntry(){
+  let st = entryStudent.value.trim();
+  let sub = entrySubject.value;
+  if(!students[st]) return alert("Няма такъв ученик");
+  let box = students[st][sub];
+
+  if(entryType.value==="grade"){
+    box.grades.push({value:+gradeValue.value, author:gradeAuthor.value, reason:gradeReason.value});
+  } else if(entryType.value==="remark"){
+    box.remarks.push(textValue.value);
+  } else {
+    box.praises.push(textValue.value);
+  }
+
+  gradeValue.value=gradeAuthor.value=gradeReason.value=textValue.value="";
+  saveData();
+  renderDiary();
+}
+
+// ---------- DIARY ----------
+function gradeColor(v){return {2:"#c0392b",3:"#e67e22",4:"#f1c40f",5:"#3498db",6:"#2ecc71"}[v]||"#777";}
+
+function renderDiary(){
+  if(!subjects.length){diaryHead.innerHTML=""; diaryBody.innerHTML=""; return;}
+  let h="<tr><th>Ученик</th>";
+  subjects.forEach(s=>h+=`<th>${s.name}</th>`);
+  h+="</tr>"; diaryHead.innerHTML=h;
+
+  let b="";
+  for(let st in students){
+    b+=`<tr><td>${st}</td>`;
+    subjects.forEach(s=>{
+      let d = students[st][s.name];
+      let gradesHTML = d.grades.map(g=>`<span class="grade" style="background:${gradeColor(g.value)}">${g.value}</span>`).join("");
+      let remarksHTML = d.remarks.join("<br>")||"-";
+      let praisesHTML = d.praises.join("<br>")||"-";
+      b+=`<td>Оц: ${gradesHTML}<br>З: ${remarksHTML}<br>П: ${praisesHTML}</td>`;
+    });
+    b+="</tr>";
+  }
+  diaryBody.innerHTML=b;
+}
+
+// ---------- INIT ----------
+showSection('authSection');
 </script>
+
 </body>
 </html>
