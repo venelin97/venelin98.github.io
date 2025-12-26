@@ -22,105 +22,27 @@ th,td{border:1px solid #ddd;padding:8px;text-align:center;}
 th{background:#3498db;color:white;}
 .grade{display:inline-block;padding:4px 7px;border-radius:5px;color:white;font-weight:bold;margin:2px;cursor:pointer;}
 </style>
+<!-- Firebase Modular SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-</head>
-<body>
-
-<header>📘 Електронен училищен дневник</header>
-
-<nav>
-<button onclick="showSection('students')">Ученици</button>
-<button onclick="showSection('input')">Въвеждане</button>
-<button onclick="showSection('diary')">Дневник</button>
-<button onclick="showSection('program')">Програма</button>
-<button onclick="logout()">Изход</button>
-</nav>
-
-<div class="container">
-
-<!-- LOGIN / REGISTER -->
-<div id="authSection" class="card">
-  <h3>Регистрация / Вход</h3>
-  <input id="authEmail" placeholder="Имейл" type="email">
-  <input id="authPass" placeholder="Парола" type="password">
-  <button class="action" onclick="registerUser()">Регистрация</button>
-  <button class="action" onclick="loginUser()">Вход</button>
-</div>
-
-<!-- УЧЕНИЦИ -->
-<div id="students" class="card hidden">
-  <h3>Добави ученик</h3>
-  <input id="newStudent" placeholder="Име на ученик">
-  <button class="action" onclick="addStudent()">Добави</button>
-  <div id="studentList"></div>
-</div>
-
-<!-- ВЪВЕЖДАНЕ -->
-<div id="input" class="card hidden">
-  <h3>Въвеждане</h3>
-  <select id="entryType">
-    <option value="grade">Оценка</option>
-    <option value="remark">Забележка</option>
-    <option value="praise">Похвала</option>
-  </select>
-  <input id="entryStudent" placeholder="Ученик">
-  <select id="entrySubject"></select>
-
-  <div id="gradeBox">
-    <input id="gradeValue" type="number" placeholder="Оценка (2-6)">
-    <input id="gradeAuthor" placeholder="От кого">
-    <input id="gradeReason" placeholder="Основание">
-  </div>
-
-  <textarea id="textValue" class="hidden" placeholder="Текст"></textarea>
-
-  <button class="action" onclick="addEntry()">Запази</button>
-</div>
-
-<!-- ДНЕВНИК -->
-<div id="diary" class="card hidden">
-  <h3>Дневник</h3>
-  <div class="table-wrap">
-    <table>
-      <thead id="diaryHead"></thead>
-      <tbody id="diaryBody"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ПРОГРАМА -->
-<div id="program" class="card hidden">
-  <h3>Седмична програма</h3>
-  <input id="subjectName" placeholder="Предмет">
-  <input id="subjectHours" type="number" placeholder="Часове седмично">
-  <button class="action" onclick="addSubject()">Добави / Редактирай предмет</button>
-
-  <table>
-    <thead><tr><th>Час</th><th>Ден 1</th><th>Ден 2</th><th>Ден 3</th></tr></thead>
-    <tbody id="programTable"></tbody>
-  </table>
-</div>
-
-</div>
-
-<script>
 // ---------- FIREBASE CONFIG ----------
 const firebaseConfig = {
-  apiKey: "ВАШИЯ_API_KEY",
-  authDomain: "ВАШИЯ_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://ВАШИЯ_PROJECT_ID.firebaseio.com",
-  projectId: "ВАШИЯ_PROJECT_ID",
-  storageBucket: "ВАШИЯ_PROJECT_ID.appspot.com",
-  messagingSenderId: "ВАШИЯ_MESSAGING_ID",
-  appId: "ВАШИЯ_APP_ID"
+  apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
+  authDomain: "dnevnik2-42909.firebaseapp.com",
+  databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "dnevnik2-42909",
+  storageBucket: "dnevnik2-42909.appspot.com",
+  messagingSenderId: "824393263608",
+  appId: "1:824393263608:web:eb35cff1cab09a16eace0d"
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+
+// Инициализация
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
 let currentUid = null;
 let students = {};
@@ -139,68 +61,56 @@ function showSection(id){
 }
 
 // ---------- AUTH ----------
-function registerUser(){
-  let email = authEmail.value.trim();
-  let pass  = authPass.value.trim();
+window.registerUser = function(){
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value.trim();
   if(!email || !pass) return alert("Попълни email и парола");
 
-  auth.createUserWithEmailAndPassword(email, pass)
-      .then(u => {
-          currentUid = u.user.uid;
-          students = {};
-          subjects = [];
-          program = [];
-          db.ref("diary/" + currentUid).set({students, subjects, program})
-            .then(() => {
-                alert("Регистрация успешна!");
-                loginAfter(currentUid);
-            });
-      })
-      .catch(err => alert(err.message));
-}
+  createUserWithEmailAndPassword(auth, email, pass)
+    .then(userCredential => {
+      currentUid = userCredential.user.uid;
+      students = {}; subjects = []; program = [];
+      set(ref(db, 'diary/' + currentUid), {students, subjects, program})
+        .then(()=> { alert("Регистрация успешна!"); loginAfter(currentUid); });
+    })
+    .catch(err=> alert(err.message));
+};
 
-function loginUser(){
-  let email = authEmail.value.trim();
-  let pass  = authPass.value.trim();
+window.loginUser = function(){
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value.trim();
   if(!email || !pass) return alert("Попълни email и парола");
 
-  auth.signInWithEmailAndPassword(email, pass)
-      .then(u => loginAfter(u.user.uid))
-      .catch(err => {
-          if(err.code === "auth/user-not-found"){
-              // автоматично създаваме акаунт, ако няма такъв
-              registerUser();
-          } else {
-              alert(err.message);
-          }
-      });
-}
+  signInWithEmailAndPassword(auth, email, pass)
+    .then(userCredential => loginAfter(userCredential.user.uid))
+    .catch(err => {
+      if(err.code === "auth/user-not-found"){ registerUser(); }
+      else alert(err.message);
+    });
+};
 
 function loginAfter(uid){
   currentUid = uid;
-  authSection.classList.add('hidden');
+  document.getElementById('authSection').classList.add('hidden');
   showSection('students');
   loadData();
 }
 
-function logout(){
-  auth.signOut();
-  location.reload();
-}
+window.logout = function(){
+  signOut(auth).then(()=> location.reload());
+};
 
 // ---------- LOAD / SAVE ----------
 function loadData(){
-  db.ref("diary/"+currentUid).once("value", snap=>{
-    let val = snap.val();
-    if(val){
+  get(child(ref(db), 'diary/' + currentUid)).then(snap=>{
+    if(snap.exists()){
+      const val = snap.val();
       students = val.students||{};
       subjects = val.subjects||[];
-      program  = val.program||[];
+      program = val.program||[];
     } else {
-      students = {};
-      subjects = [];
-      program  = [];
-      db.ref("diary/"+currentUid).set({students, subjects, program});
+      students = {}; subjects = []; program = [];
+      set(ref(db, 'diary/' + currentUid), {students, subjects, program});
     }
     updateSubjectSelect();
     renderDiary();
@@ -211,68 +121,63 @@ function loadData(){
 
 function saveData(){
   if(!currentUid) return;
-  db.ref("diary/"+currentUid).set({students, subjects, program});
+  set(ref(db, 'diary/' + currentUid), {students, subjects, program});
 }
 
 // ---------- STUDENTS ----------
-function addStudent(){
-  let n = newStudent.value.trim();
+window.addStudent = function(){
+  const n = document.getElementById('newStudent').value.trim();
   if(!n) return alert("Невалидно име");
   if(!students[n]) students[n]={};
   subjects.forEach(s=> students[n][s.name]={grades:[], remarks:[], praises:[]});
-  newStudent.value="";
-  saveData();
-  renderDiary();
-  updateStudentList();
+  document.getElementById('newStudent').value="";
+  saveData(); renderDiary(); updateStudentList();
 }
 
 function updateStudentList(){
+  const studentList = document.getElementById('studentList');
   studentList.innerHTML="";
   for(let st in students){
-    let div = document.createElement("div");
+    const div = document.createElement("div");
     div.textContent=st;
-    let btn = document.createElement("button");
+    const btn = document.createElement("button");
     btn.textContent="Премахни";
-    btn.onclick=()=>{delete students[st]; saveData(); renderDiary(); updateStudentList();}
+    btn.onclick = ()=>{ delete students[st]; saveData(); renderDiary(); updateStudentList(); };
     div.appendChild(btn);
     studentList.appendChild(div);
   }
 }
 
 // ---------- SUBJECTS ----------
-function addSubject(){
-  let n = subjectName.value.trim();
-  let h = +subjectHours.value;
+window.addSubject = function(){
+  const n = document.getElementById('subjectName').value.trim();
+  const h = +document.getElementById('subjectHours').value;
   if(!n || !h) return alert("Попълни предмет и часове");
-  
-  // ако съществува, редактираме часовете
-  let exists = subjects.find(s=>s.name===n);
-  if(exists) { exists.hours = h; }
-  else { subjects.push({name:n,hours:h}); }
+
+  const exists = subjects.find(s=>s.name===n);
+  if(exists) exists.hours = h; else subjects.push({name:n, hours:h});
 
   for(let st in students){
     if(!students[st][n]) students[st][n]={grades:[], remarks:[], praises:[]};
   }
-  subjectName.value=subjectHours.value="";
-  saveData();
-  updateSubjectSelect();
-  renderDiary();
+  document.getElementById('subjectName').value="";
+  document.getElementById('subjectHours').value="";
+  saveData(); updateSubjectSelect(); renderDiary();
 }
 
-// ---------- SUBJECT SELECT ----------
 function updateSubjectSelect(){
-  entrySubject.innerHTML=subjects.map(s=>`<option>${s.name}</option>`).join("");
+  const entrySubject = document.getElementById('entrySubject');
+  entrySubject.innerHTML = subjects.map(s=>`<option>${s.name}</option>`).join("");
 }
 
 // ---------- PROGRAM ----------
-function generateProgram(){
+window.generateProgram = function(){
   let pool=[];
-  subjects.forEach(s=>{for(let i=0;i<s.hours;i++) pool.push(s.name);});
+  subjects.forEach(s=>{ for(let i=0;i<s.hours;i++) pool.push(s.name); });
   pool.sort(()=>Math.random()-0.5);
   program=[];
   for(let h=0;h<6;h++){ program[h]=[pool.pop()||"", pool.pop()||"", pool.pop()||""]; }
-  saveData();
-  renderProgram();
+  saveData(); renderProgram();
 }
 
 function renderProgram(){
@@ -282,55 +187,73 @@ function renderProgram(){
     for(let d=0;d<3;d++) t+=`<td>${program[i]?.[d]||""}</td>`;
     t+="</tr>";
   }
-  programTable.innerHTML=t;
+  document.getElementById('programTable').innerHTML=t;
 }
 
 // ---------- INPUT ----------
-entryType.onchange=()=>{gradeBox.classList.toggle("hidden", entryType.value!=="grade"); textValue.classList.toggle("hidden", entryType.value==="grade");};
+document.getElementById('entryType').onchange = function(){
+  const gradeBox = document.getElementById('gradeBox');
+  const textValue = document.getElementById('textValue');
+  gradeBox.classList.toggle("hidden", this.value!=="grade");
+  textValue.classList.toggle("hidden", this.value==="grade");
+};
 
-function addEntry(){
-  let st = entryStudent.value.trim();
-  let sub = entrySubject.value;
+window.addEntry = function(){
+  const st = document.getElementById('entryStudent').value.trim();
+  const sub = document.getElementById('entrySubject').value;
   if(!students[st]) return alert("Няма такъв ученик");
-  let box = students[st][sub];
+  const box = students[st][sub];
 
-  if(entryType.value==="grade"){ box.grades.push({value:+gradeValue.value, author:gradeAuthor.value, reason:gradeReason.value}); }
-  else if(entryType.value==="remark"){ box.remarks.push(textValue.value); }
-  else { box.praises.push(textValue.value); }
+  if(document.getElementById('entryType').value==="grade"){
+    box.grades.push({
+      value:+document.getElementById('gradeValue').value,
+      author:document.getElementById('gradeAuthor').value,
+      reason:document.getElementById('gradeReason').value
+    });
+  } else if(document.getElementById('entryType').value==="remark"){
+    box.remarks.push(document.getElementById('textValue').value);
+  } else {
+    box.praises.push(document.getElementById('textValue').value);
+  }
 
-  gradeValue.value=gradeAuthor.value=gradeReason.value=textValue.value="";
-  saveData();
-  renderDiary();
+  document.getElementById('gradeValue').value="";
+  document.getElementById('gradeAuthor').value="";
+  document.getElementById('gradeReason').value="";
+  document.getElementById('textValue').value="";
+  saveData(); renderDiary();
 }
 
 // ---------- DIARY ----------
-function gradeColor(v){return {2:"#c0392b",3:"#e67e22",4:"#f1c40f",5:"#3498db",6:"#2ecc71"}[v]||"#777";}
+function gradeColor(v){ return {2:"#c0392b",3:"#e67e22",4:"#f1c40f",5:"#3498db",6:"#2ecc71"}[v]||"#777"; }
 
 function renderDiary(){
-  if(!subjects.length){diaryHead.innerHTML=""; diaryBody.innerHTML=""; return;}
+  if(!subjects.length){ document.getElementById('diaryHead').innerHTML=""; document.getElementById('diaryBody').innerHTML=""; return; }
   let h="<tr><th>Ученик</th>";
-  subjects.forEach(s=>h+=`<th>${s.name}</th>`);
-  h+="</tr>"; diaryHead.innerHTML=h;
+  subjects.forEach(s=> h+=`<th>${s.name}</th>`); h+="</tr>";
+  document.getElementById('diaryHead').innerHTML = h;
 
   let b="";
   for(let st in students){
     b+=`<tr><td>${st}</td>`;
     subjects.forEach(s=>{
-      let d = students[st][s.name];
-      let gradesHTML = d.grades.map(g=>`<span class="grade" style="background:${gradeColor(g.value)}">${g.value}</span>`).join("");
-      let remarksHTML = d.remarks.join("<br>")||"-";
-      let praisesHTML = d.praises.join("<br>")||"-";
+      const d = students[st][s.name];
+      const gradesHTML = d.grades.map(g=>`<span class="grade" style="background:${gradeColor(g.value)}">${g.value}</span>`).join("");
+      const remarksHTML = d.remarks.join("<br>")||"-";
+      const praisesHTML = d.praises.join("<br>")||"-";
       b+=`<td>Оц: ${gradesHTML}<br>З: ${remarksHTML}<br>П: ${praisesHTML}</td>`;
     });
     b+="</tr>";
   }
-  diaryBody.innerHTML=b;
+  document.getElementById('diaryBody').innerHTML=b;
 }
 
 // ---------- INIT ----------
 showSection('authSection');
 </script>
+</head>
+<body>
 </body>
 </html>
+
 
 
