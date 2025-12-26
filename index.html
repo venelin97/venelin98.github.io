@@ -22,30 +22,9 @@ table { border-collapse:collapse; width:100%; margin-top:10px; }
 th, td { border:1px solid #dcdde1; padding:8px; text-align:center; }
 th { background:#718093; color:white; }
 .grade-box { display:inline-block; width:35px; height:35px; border-radius:6px; color:white; font-weight:bold; line-height:35px; cursor:pointer; margin:2px; position:relative; }
-.grade-popup { position:absolute; background:white; border:1px solid #dcdde1; padding:10px; border-radius:6px; top:40px; left:0; display:none; z-index:100; width:max-content; box-shadow:0 2px 10px rgba(0,0,0,0.2); }
+.grade-popup { position:absolute; background:white; border:1px solid #dcdde1; padding:10px; border-radius:6px; top:40px; left:0; display:none; z-index:100; width:max-content; box-shadow:0 2px 10px rgba(0,0,0,0.2); color:black; }
 .grade-popup button { margin-top:5px; background:#e84118; padding:4px 8px; border:none; border-radius:4px; color:white; cursor:pointer; }
-.grade-popup .close-popup { cursor:pointer; font-weight:bold; }
-  .grade-popup {
-    position:absolute;
-    background:white;
-    border:1px solid #dcdde1;
-    padding:6px 10px;
-    border-radius:6px;
-    top:40px;
-    left:0;
-    display:none;
-    z-index:100;
-    width:max-content;
-    box-shadow:0 2px 10px rgba(0,0,0,0.2);
-    color:black; /* черен текст */
-}
-.grade-popup .close-popup {
-    cursor:pointer;
-    color:red; /* червен хикс */
-    font-weight:bold;
-    float:right;
-}
-
+.grade-popup .close-popup { cursor:pointer; color:red; font-weight:bold; float:right; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -106,13 +85,14 @@ th { background:#718093; color:white; }
 <h2>Оценки / Похвали / Забележки</h2>
 <select id="studentSelect"></select>
 <select id="subjectSelect"></select>
-<select id="typeSelect">
+<select id="typeSelect" onchange="updateEntryFields()">
 <option value="grade">Оценка</option>
 <option value="praise">Похвала</option>
 <option value="remark">Забележка</option>
 </select>
-<input type="text" id="valueInput" placeholder="Стойност (напр. 5) или текст">
-<input type="text" id="reasonInput" placeholder="Причина / коментар (за оценки)">
+<div id="gradeFields">
+<!-- тук ще се показват динамично полетата -->
+</div>
 <button onclick="addEntry()">Запази</button>
 </section>
 
@@ -127,7 +107,7 @@ const firebaseConfig = {
   authDomain: "dnevnik2-42909.firebaseapp.com",
   databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "dnevnik2-42909",
-  storageBucket: "dnevnik2-42909.firebasestorage.app",
+  storageBucket: "dnevnik2-42909.appspot.com",
   messagingSenderId: "824393263608",
   appId: "1:824393263608:web:eb35cff1cab09a16eace0d"
 };
@@ -147,7 +127,7 @@ function login(){
     const email=document.getElementById('email').value;
     const password=document.getElementById('password').value;
     auth.signInWithEmailAndPassword(email,password)
-        .then(()=>{document.getElementById('auth').style.display='none';document.getElementById('menu').style.display='block';loadStudents();loadSubjects();loadJournal();})
+        .then(()=>{document.getElementById('auth').style.display='none';document.getElementById('menu').style.display='block';loadStudents();loadSubjects();loadJournal(); updateEntryFields();})
         .catch(e=>document.getElementById('auth-msg').innerText=e.message);
 }
 function logout(){auth.signOut().then(()=>location.reload());}
@@ -216,30 +196,7 @@ function generateSchedule(){
     });
 }
 
-// Добавяне на записи
-function addEntry(){
-    const studentId = document.getElementById('studentSelect').value;
-    const subjectId = document.getElementById('subjectSelect').value;
-    const type = document.getElementById('typeSelect').value;
-    const valueInput = document.getElementById('valueInput').value;
-    const reason = document.getElementById('reasonInput')?.value || '';
-    if(!studentId || !subjectId || !valueInput) return;
-    const id = Date.now();
-    
-    let entryData = { 
-        id, 
-        type, 
-        value: (type==='grade'?valueInput:'-'), 
-        reason: (type==='grade'?reason:valueInput), 
-        teacher: auth.currentUser.email 
-    };
-    
-    db.ref(`entries/${studentId}/${subjectId}/${id}`).set(entryData);
-    
-    document.getElementById('valueInput').value='';
-    if(document.getElementById('reasonInput')) document.getElementById('reasonInput').value='';
-    loadJournal();
-}
+// Полета при въвеждане на запис
 function updateEntryFields() {
     const type = document.getElementById('typeSelect').value;
     const gradeFields = document.getElementById('gradeFields');
@@ -254,6 +211,30 @@ function updateEntryFields() {
             <input type="text" id="reasonInput" placeholder="Обяснение / текст">
         `;
     }
+}
+
+// Добавяне на записи
+function addEntry(){
+    const studentId = document.getElementById('studentSelect').value;
+    const subjectId = document.getElementById('subjectSelect').value;
+    const type = document.getElementById('typeSelect').value;
+    const valueInput = document.getElementById('valueInput')?.value || '';
+    const reason = document.getElementById('reasonInput')?.value || '';
+    if(!studentId || !subjectId || (type==='grade' && !valueInput)) return;
+    const id = Date.now();
+    
+    let entryData = { 
+        id, 
+        type, 
+        value: (type==='grade'?valueInput:'-'), 
+        reason: (type==='grade'?reason:valueInput), 
+        teacher: auth.currentUser.email 
+    };
+    
+    db.ref(`entries/${studentId}/${subjectId}/${id}`).set(entryData);
+    
+    updateEntryFields(); // ресет на полетата
+    loadJournal();
 }
 
 // Дневник
@@ -283,28 +264,19 @@ function loadJournal(){
                         const entries = snapE.val() || {};
                         tdGrade.innerHTML=''; tdPraise.innerHTML=''; tdRemark.innerHTML='';
                     
-                        
                         for(let eId in entries){
                             const entry = entries[eId];
                             const box = document.createElement('div'); box.className='grade-box';
                             box.textContent = entry.type==='grade' ? entry.value : (entry.type==='praise' ? 'П' : 'З');
                             box.style.background = entry.type==='grade' ? colorGrade(entry.value) : (entry.type==='praise'?'#3498db':'#e67e22');
                             
-                           const popup=document.createElement('div'); 
-popup.className='grade-popup';
-popup.innerHTML = `
-    <div style="text-align:right;"><span class="close-popup">&times;</span></div>
-    <div><strong>Причина / Текст:</strong> ${entry.reason||entry.value}</div>
-    <button>Изтрий</button>
-`;
-popup.querySelector('.close-popup').onclick = (e)=>{ e.stopPropagation(); popup.style.display='none'; }
-popup.querySelector('button').onclick = (e)=>{
-    e.stopPropagation();
-    db.ref(\`entries/${sId}/${subId}/${entry.id}\`).remove().then(()=>loadJournal());
-}
-box.onclick = ()=>{ popup.style.display = popup.style.display==='block'?'none':'block'; }
-box.appendChild(popup);
-
+                            const popup=document.createElement('div'); 
+                            popup.className='grade-popup';
+                            popup.innerHTML = `
+                                <div style="text-align:right;"><span class="close-popup">&times;</span></div>
+                                <div><strong>Причина / Текст:</strong> ${entry.reason || entry.value}</div>
+                                <button>Изтрий</button>
+                            `;
                             popup.querySelector('.close-popup').onclick = (e)=>{ e.stopPropagation(); popup.style.display='none'; }
                             popup.querySelector('button').onclick = (e)=>{
                                 e.stopPropagation();
@@ -328,9 +300,16 @@ box.appendChild(popup);
 
 function colorGrade(value){value=parseInt(value); if(value>=5)return'#44bd32'; if(value==4)return'#fbc531'; if(value==3)return'#e1b12c'; if(value==2)return'#e84118'; return'#7f8fa6';}
 function showSection(id){['students','subjects','grades','journal'].forEach(sec=>document.getElementById(sec).style.display=sec===id?'block':'none');}
-auth.onAuthStateChanged(user=>{if(user){document.getElementById('auth').style.display='none';document.getElementById('menu').style.display='block';loadStudents();loadSubjects();loadJournal();}});
+auth.onAuthStateChanged(user=>{
+    if(user){
+        document.getElementById('auth').style.display='none';
+        document.getElementById('menu').style.display='block';
+        loadStudents();
+        loadSubjects();
+        loadJournal();
+        updateEntryFields();
+    }
+});
 </script>
 </body>
 </html>
-
-
