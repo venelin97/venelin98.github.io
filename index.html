@@ -232,6 +232,7 @@ function loadJournal(){
                     db.ref(`entries/${sId}/${subId}`).once('value').then(snapE=>{
                         const entries=snapE.val()||{};
                         tdGrade.innerHTML=''; tdPraise.innerHTML=''; tdRemark.innerHTML='';
+
                         for(let eId in entries){
                             const entry=entries[eId];
                             const box=document.createElement('div'); box.className='grade-box';
@@ -240,14 +241,14 @@ function loadJournal(){
 
                             const popup=document.createElement('div'); popup.className='grade-popup';
                             popup.innerHTML=`<div>${entry.type==='grade'?'Стойност: '+entry.value:entry.value}</div>
-                                             <div>Причина: ${entry.reason||'Няма'}</div>
+                                             <div>Коментар: ${entry.reason||'Няма'}</div>
                                              <button style="margin-top:5px;background:#e84118;padding:4px 8px;border:none;border-radius:4px;color:white;cursor:pointer;">Изтрий</button>`;
                             const deleteBtn=popup.querySelector('button');
                             deleteBtn.onclick=(e)=>{
                                 e.stopPropagation();
                                 db.ref(`entries/${sId}/${subId}/${entry.id}`).remove().then(()=>loadJournal());
                             };
-                            box.onclick=()=>{popup.style.display=popup.style.display==='block'?'none':'block';};
+                            box.onclick=()=>{popup.style.display = popup.style.display==='block'?'none':'block';};
                             box.appendChild(popup);
 
                             if(entry.type==='grade') tdGrade.appendChild(box);
@@ -263,13 +264,26 @@ function loadJournal(){
     });
 }
 
-function colorGrade(value){value=parseInt(value); if(value>=5)return'#44bd32'; if(value==4)return'#fbc531'; if(value==3)return'#e1b12c'; if(value==2)return'#e84118'; return'#7f8fa6';}
+// Цветове за оценки (можеш да промениш 5 на син)
+function colorGrade(value){
+    value=parseInt(value);
+    if(value>=5) return '#2980b9'; // син за 5
+    if(value==4) return '#fbc531';
+    if(value==3) return '#e1b12c';
+    if(value==2) return '#e84118';
+    return '#7f8fa6';
+}
 
 function showSection(id){['students','subjects','grades','journal'].forEach(sec=>document.getElementById(sec).style.display=sec===id?'block':'none');}
-auth.onAuthStateChanged(user=>{if(user){document.getElementById('auth').style.display='none';document.getElementById('menu').style.display='block';loadStudents();loadSubjects();loadJournal();}});
+auth.onAuthStateChanged(user=>{
+    if(user){
+        document.getElementById('auth').style.display='none';
+        document.getElementById('menu').style.display='block';
+        loadStudents();
+        loadSubjects();
+        loadJournal();
+    }
+});
 </script>
 </body>
 </html>
-
-
-
