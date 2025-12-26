@@ -107,21 +107,19 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebas
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
 import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
 
-/* Firebase */
 const firebaseConfig = {
  apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
  authDomain: "dnevnik2-42909.firebaseapp.com",
  databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
  projectId: "dnevnik2-42909"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* STATE */
 let uid=null, students={}, subjects=[], grades={}, program={day1:[],day2:[],day3:[]};
 
-/* UI */
 window.showSection=id=>{
  if(!uid && id!=="auth") return alert("Първо влез!");
  document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
@@ -129,25 +127,26 @@ window.showSection=id=>{
  updateEntrySelects(); renderSubjects(); renderDiary(); renderProgram();
 };
 
-/* AUTH */
 window.register=()=>{
  createUserWithEmailAndPassword(auth,email.value,password.value)
  .then(u=>{uid=u.user.uid; initUser(); showSection('students');})
  .catch(e=>alert(e.message));
 };
+
 window.login=()=>{
  signInWithEmailAndPassword(auth,email.value,password.value)
  .then(u=>{uid=u.user.uid; loadUser(); showSection('students');})
  .catch(e=>alert(e.message));
 };
+
 window.logout=()=>signOut(auth).then(()=>location.reload());
 
-/* INIT / LOAD */
 function initUser(){
  students={}; subjects=[]; grades={};
  program={day1:Array(6).fill(""), day2:Array(6).fill(""), day3:Array(6).fill("")};
  saveUser();
 }
+
 function loadUser(){
  get(ref(db,"diary/"+uid)).then(s=>{
    if(s.exists()){
@@ -157,11 +156,11 @@ function loadUser(){
      grades=data.grades||{};
      program=data.program||{day1:Array(6).fill(""),day2:Array(6).fill(""),day3:Array(6).fill("")};
    } else initUser();
-   renderSubjects();
+   renderSubjects(); renderStudentList();
 });
+
 }
 
-/* SAVE */
 function saveUser(){
  set(ref(db,"diary/"+uid),{students,subjects,grades,program});
 }
@@ -172,6 +171,7 @@ window.addStudent=()=>{
  if(!students[studentName.value]) students[studentName.value]={};
  studentName.value=""; saveUser(); renderStudentList(); updateEntrySelects(); renderDiary();
 };
+
 function renderStudentList(){
  studentList.innerHTML="";
  for(let s in students){
@@ -194,6 +194,7 @@ window.addSubject=()=>{
  if(exist){exist.hours=h;} else subjects.push({name:n,hours:h});
  subjectName.value=""; subjectHours.value=""; saveUser(); renderSubjects(); updateEntrySelects();
 };
+
 function renderSubjects(){
  subjectList.innerHTML="";
  subjects.forEach((s,i)=>{
@@ -280,6 +281,9 @@ function renderProgram(){
    programTable.appendChild(tr);
  }
 }
+
+showSection("auth");
 </script>
 </body>
 </html>
+
