@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Електронен дневник</title>
+<title>Електронен училищен дневник</title>
 <style>
-body{margin:0;font-family:Segoe UI;background:#f1f5f9;}
+body{margin:0;font-family:Segoe UI;background:#f1f5f9}
 header{background:#1e293b;color:#fff;padding:15px;text-align:center;font-size:22px;}
 nav{display:flex;background:#334155;}
 nav button{flex:1;padding:12px;border:none;background:none;color:#fff;cursor:pointer;}
@@ -13,22 +13,23 @@ nav button:hover{background:#475569;}
 .container{max-width:1200px;margin:auto;padding:15px;}
 .card{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px;box-shadow:0 5px 15px rgba(0,0,0,.1);}
 .hidden{display:none;}
-input,select,textarea{width:100%;padding:10px;margin:6px 0;border-radius:6px;border:1px solid #cbd5e1;}
-button.action{background:#2563eb;color:#fff;border:none;padding:10px;border-radius:6px;cursor:pointer;}
+input,select,textarea{width:100%;padding:8px;margin:4px 0;border-radius:5px;border:1px solid #cbd5e1;}
+button.action{background:#2563eb;color:#fff;border:none;padding:8px;border-radius:5px;cursor:pointer;margin:2px;}
 button.action:hover{opacity:.9;}
-table{width:100%;border-collapse:collapse;}
-th,td{border:1px solid #e5e7eb;padding:8px;text-align:center;vertical-align:top;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{border:1px solid #e5e7eb;padding:6px;text-align:center;vertical-align:top;}
 th{background:#e5e7eb;}
 .grade{padding:4px 6px;border-radius:5px;color:#fff;font-weight:bold;margin:2px;display:inline-block;cursor:pointer;}
 .grade:hover{opacity:.8;}
-textarea{resize:none;}
 </style>
 </head>
 <body>
 
 <header>📘 Електронен училищен дневник</header>
+
 <nav>
 <button onclick="showSection('students')">Ученици</button>
+<button onclick="showSection('subjects')">Предмети</button>
 <button onclick="showSection('input')">Въвеждане</button>
 <button onclick="showSection('diary')">Дневник</button>
 <button onclick="showSection('program')">Програма</button>
@@ -52,6 +53,15 @@ textarea{resize:none;}
 <input id="studentName" placeholder="Име на ученик">
 <button class="action" onclick="addStudent()">Добави ученик</button>
 <ul id="studentList"></ul>
+</div>
+
+<!-- SUBJECTS -->
+<div id="subjects" class="card hidden">
+<h3>Предмети</h3>
+<input id="subjectName" placeholder="Име на предмет">
+<input id="subjectHours" type="number" min="1" max="6" placeholder="Часове седмично">
+<button class="action" onclick="addSubject()">Добави / Редактирай</button>
+<ul id="subjectList"></ul>
 </div>
 
 <!-- INPUT -->
@@ -114,16 +124,14 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 /* STATE */
-let uid=null, students={}, subjects=["Математика","БЕЛ"], grades={}, program={day1:[],day2:[],day3:[]};
+let uid=null, students={}, subjects=[], grades={}, program={day1:[],day2:[],day3:[]};
 
 /* UI */
 window.showSection=id=>{
  if(!uid && id!=="auth") return alert("Първо влез!");
  document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
  document.getElementById(id).classList.remove('hidden');
- updateEntrySelects();
- renderDiary();
- renderProgram();
+ updateEntrySelects(); renderDiary(); renderProgram(); renderSubjects();
 };
 
 /* AUTH */
@@ -141,7 +149,8 @@ window.logout=()=>signOut(auth).then(()=>location.reload());
 
 /* INIT / LOAD */
 function initUser(){
- students={}; grades={}; program={day1:Array(6).fill(""), day2:Array(6).fill(""), day3:Array(6).fill("")};
+ students={}; subjects=[]; grades={};
+ program={day1:Array(6).fill(""), day2:Array(6).fill(""), day3:Array(6).fill("")};
  saveUser();
 }
 function loadUser(){
@@ -149,11 +158,12 @@ function loadUser(){
    if(s.exists()){
      const data=s.val();
      students=data.students||{};
-     subjects=data.subjects||subjects;
+     subjects=data.subjects||[];
      grades=data.grades||{};
      program=data.program||{day1:Array(6).fill(""), day2:Array(6).fill(""), day3:Array(6).fill("")};
    } else initUser();
- });
+   renderSubjects();
+});
 }
 
 /* SAVE */
@@ -166,108 +176,125 @@ window.addStudent=()=>{
  if(!studentName.value) return;
  if(!students[studentName.value]) students[studentName.value]={};
  studentName.value="";
- saveUser(); renderDiary(); updateEntrySelects();
+ saveUser(); renderDiary(); updateEntrySelects(); renderStudentList();
 };
-function updateEntrySelects(){
- entryStudent.innerHTML=Object.keys(students).map(s=>`<option>${s}</option>`).join("");
- entrySubject.innerHTML=subjects.map(s=>`<option>${s}</option>`).join("");
+function renderStudentList(){
+ studentList.innerHTML="";
+ for(let s in students){
+   let li=document.createElement("li");
+   li.textContent=s;
+   let btn=document.createElement("button");
+   btn.textContent="Премахни";
+   btn.onclick=()=>{delete students[s]; saveUser(); renderDiary(); renderStudentList(); updateEntrySelects();}
+   li.appendChild(btn); studentList.appendChild(li);
+ }
 }
 
-/* INPUT */
-entryType.onchange=()=>{
- gradeBox.classList.toggle("hidden", entryType.value!=="grade");
- textValue.classList.toggle("hidden", entryType.value==="grade");
+/* SUBJECTS */
+window.addSubject=()=>{
+ const n=subjectName.value.trim();
+ const h=+subjectHours.value;
+ if(!n||!h) return alert("Попълнете предмет и часове");
+ const totalHours=subjects.reduce((acc,s)=>acc+ (s.hours||0),0) + h;
+ if(totalHours>18) return alert("Общите часове не могат да надвишават 18");
+ let exist=subjects.find(s=>s.name===n);
+ if(exist){exist.hours=h;} else subjects.push({name:n,hours:h});
+ subjectName.value=""; subjectHours.value=""; saveUser(); renderSubjects(); updateEntrySelects();
 };
+function renderSubjects(){
+ subjectList.innerHTML="";
+ subjects.forEach((s,i)=>{
+   let li=document.createElement("li");
+   li.textContent=`${s.name} (${s.hours}ч)`;
+   let btn=document.createElement("button");
+   btn.textContent="Премахни";
+   btn.onclick=()=>{subjects.splice(i,1); saveUser(); renderSubjects(); updateEntrySelects();}
+   li.appendChild(btn); subjectList.appendChild(li);
+ });
+}
+
+/* ENTRY */
+function updateEntrySelects(){
+ entryStudent.innerHTML=Object.keys(students).map(s=>`<option>${s}</option>`).join("");
+ entrySubject.innerHTML=subjects.map(s=>`<option>${s.name}</option>`).join("");
+}
+entryType.onchange=()=>{gradeBox.classList.toggle("hidden",entryType.value!=="grade"); textValue.classList.toggle("hidden",entryType.value==="grade");};
 window.addEntry=()=>{
  const st=entryStudent.value, sb=entrySubject.value;
  if(!students[st]) return alert("Няма такъв ученик");
- if(entryType.value==="grade"){
-   const val=+gradeValue.value;
-   if(!grades[st]) grades[st]={};
-   if(!grades[st][sb]) grades[st][sb]=[];
-   grades[st][sb].push({value:val, author:gradeAuthor.value, reason:gradeReason.value});
-   gradeValue.value=gradeAuthor.value=gradeReason.value="";
- } else if(entryType.value==="remark"){
-   if(!grades[st]) grades[st]={};
-   if(!grades[st][sb]) grades[st][sb]=[];
-   grades[st][sb].push({remark:textValue.value});
-   textValue.value="";
- } else {
-   if(!grades[st]) grades[st]={};
-   if(!grades[st][sb]) grades[st][sb]=[];
-   grades[st][sb].push({praise:textValue.value});
-   textValue.value="";
- }
+ if(!grades[st]) grades[st]={};
+ if(!grades[st][sb]) grades[st][sb]=[];
+ if(entryType.value==="grade") grades[st][sb].push({value:+gradeValue.value,author:gradeAuthor.value,reason:gradeReason.value});
+ else if(entryType.value==="remark") grades[st][sb].push({remark:textValue.value});
+ else grades[st][sb].push({praise:textValue.value});
+ gradeValue.value=gradeAuthor.value=gradeReason.value=textValue.value="";
  saveUser(); renderDiary();
 };
 
 /* DIARY */
 function renderDiary(){
- let h="<tr><th>Ученик</th>";
- subjects.forEach(s=>h+=`<th>${s}<br>Оценки / Забележки / Похвали</th>`);
- diaryHead.innerHTML=h+"</tr>";
-
- let b="";
+ diaryHead.innerHTML="<tr><th>Ученик</th>";
+ subjects.forEach(s=>diaryHead.innerHTML+=`<th>${s.name}<br>Оценки / Забележки / Похвали</th>`);
+ diaryHead.innerHTML+="</tr>";
+ diaryBody.innerHTML="";
  for(let st in students){
-   b+="<tr><td>"+st+"</td>";
+   let tr=document.createElement("tr");
+   let td=document.createElement("td"); td.textContent=st; tr.appendChild(td);
    subjects.forEach(sb=>{
-     let cell="";
-     (grades[st]?.[sb]||[]).forEach((g,i)=>{
-       if(g.value) cell+=`<span class="grade" style="background:${{2:"#dc2626",3:"#ea580c",4:"#ca8a04",5:"#2563eb",6:"#16a34a"}[g.value]||"#64748b"}" onclick="deleteGrade('${st}','${sb}',${i})">${g.value} (${g.author || ""}:${g.reason || ""})</span><br>`;
-       if(g.remark) cell+=`<span style="color:#111">${g.remark}</span><br>`;
-       if(g.praise) cell+=`<span style="color:#16a34a">${g.praise}</span><br>`;
+     let cell=document.createElement("td");
+     (grades[st]?.[sb.name]||[]).forEach((g,i)=>{
+       if(g.value){
+         let span=document.createElement("span"); span.className="grade";
+         span.style.background={2:"#dc2626",3:"#ea580c",4:"#ca8a04",5:"#2563eb",6:"#16a34a"}[g.value]||"#64748b";
+         span.textContent=g.value;
+         span.onclick=()=>{showGradeInfo(st,sb.name,i)};
+         cell.appendChild(span); cell.appendChild(document.createElement("br"));
+       }
+       if(g.remark){let r=document.createElement("div"); r.textContent=g.remark; cell.appendChild(r);}
+       if(g.praise){let p=document.createElement("div"); p.textContent=g.praise; cell.appendChild(p);}
      });
-     b+="<td>"+cell+"</td>";
+     tr.appendChild(cell);
    });
-   b+="</tr>";
+   diaryBody.appendChild(tr);
  }
- diaryBody.innerHTML=b;
 }
-window.deleteGrade=(st,sb,i)=>{
- if(confirm("Сигурни ли сте, че искате да изтриете тази оценка?")){
-   grades[st][sb].splice(i,1);
-   saveUser(); renderDiary();
- }
-};
+function showGradeInfo(st,sb,i){
+ const g=grades[st][sb][i];
+ let msg=``;
+ if(g.value) msg+=`Оценка: ${g.value}\nОт: ${g.author || ''}\nОснование: ${g.reason || ''}`;
+ if(g.remark) msg+=`Забележка: ${g.remark}`;
+ if(g.praise) msg+=`Похвала: ${g.praise}`;
+ if(confirm(msg+"\nИскате ли да изтриете?")){grades[st][sb].splice(i,1); saveUser(); renderDiary();}
+}
 
 /* PROGRAM */
 window.generateProgram=()=>{
- const allSubjects=subjects.slice();
+ const totalHours=subjects.reduce((acc,s)=>acc+s.hours,0);
+ if(totalHours!==18){return alert("Сумата на часовете трябва да е 18!");}
+ const allSubjects=subjects.map(s=>s.name);
  program={day1:[],day2:[],day3:[]};
  for(let d=1;d<=3;d++){
    let dayArr=[];
-   for(let h=0;h<6;h++){
-     let sub=allSubjects[Math.floor(Math.random()*allSubjects.length)];
-     dayArr.push(sub);
-   }
+   for(let h=0;h<6;h++){dayArr.push(allSubjects[Math.floor(Math.random()*allSubjects.length)]);}
    program[`day${d}`]=dayArr;
  }
  saveUser(); renderProgram();
 };
 function renderProgram(){
  if(!program.day1) return;
- let table="";
+ programTable.innerHTML="";
  for(let i=0;i<6;i++){
-   table+="<tr><td>"+(i+1)+"</td>";
+   let tr=document.createElement("tr");
+   let td=document.createElement("td"); td.textContent=i+1; tr.appendChild(td);
    for(let d=1;d<=3;d++){
-     table+=`<td contenteditable="true" onblur="saveProgram()">${program[`day${d}`][i]}</td>`;
+     let tdDay=document.createElement("td");
+     tdDay.contentEditable=true; tdDay.innerText=program[`day${d}`][i];
+     tdDay.onblur=()=>{program[`day${d}`][i]=tdDay.innerText; saveUser();};
+     tr.appendChild(tdDay);
    }
-   table+="</tr>";
+   programTable.appendChild(tr);
  }
- programTable.innerHTML=table;
 }
-window.saveProgram=()=>{
- for(let i=0;i<6;i++){
-   for(let d=1;d<=3;d++){
-     const val=programTable.rows[i].cells[d].innerText;
-     program[`day${d}`][i]=val;
-   }
- }
- saveUser();
-}
-showSection("auth");
 </script>
 </body>
 </html>
-
-
