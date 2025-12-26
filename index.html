@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Стилен Електронен Дневник</title>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-    body { font-family: 'Roboto', sans-serif; margin: 0; background: #f5f6fa; }
-    header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #2f3640; color: white; }
-    header h1 { margin: 0; font-weight: 500; font-size: 24px; }
-    nav button { margin: 0 5px; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; background: #718093; color: white; transition: 0.3s; }
-    nav button:hover { background: #44bd32; }
-    section { max-width: 1200px; margin: 20px auto; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-    input, select, button { margin: 5px 0; padding: 8px; border-radius: 6px; border: 1px solid #dcdde1; }
-    button { cursor: pointer; background: #44bd32; color: white; border: none; transition: 0.3s; }
-    button:hover { background: #4cd137; }
-    ul { list-style: none; padding: 0; }
-    ul li { margin: 8px 0; display: flex; justify-content: space-between; align-items: center; background: #f1f2f6; padding: 8px 12px; border-radius: 6px; }
-    ul li button { margin-left: 10px; background: #e84118; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    th, td { border: 1px solid #dcdde1; padding: 8px; text-align: center; }
-    th { background: #718093; color: white; }
-    .grade-box { display: inline-block; width: 35px; height: 35px; border-radius: 6px; color: white; font-weight: bold; line-height: 35px; cursor: pointer; margin: 2px; position: relative; }
-    .grade-popup { position: absolute; background: white; border: 1px solid #dcdde1; padding: 6px 10px; border-radius: 6px; top: 40px; left: 0; display: none; z-index: 100; width: max-content; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+body { font-family: 'Roboto', sans-serif; margin: 0; background: #f5f6fa; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #2f3640; color: white; }
+header h1 { margin: 0; font-weight: 500; font-size: 24px; }
+nav button { margin: 0 5px; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; background: #718093; color: white; transition: 0.3s; }
+nav button:hover { background: #44bd32; }
+section { max-width: 1200px; margin: 20px auto; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+input, select, button { margin: 5px 0; padding: 8px; border-radius: 6px; border: 1px solid #dcdde1; }
+button { cursor: pointer; background: #44bd32; color: white; border: none; transition: 0.3s; }
+button:hover { background: #4cd137; }
+ul { list-style: none; padding: 0; }
+ul li { margin: 8px 0; display: flex; justify-content: space-between; align-items: center; background: #f1f2f6; padding: 8px 12px; border-radius: 6px; }
+ul li button { margin-left: 10px; background: #e84118; }
+table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+th, td { border: 1px solid #dcdde1; padding: 8px; text-align: center; }
+th { background: #718093; color: white; }
+.grade-box { display: inline-block; width: 35px; height: 35px; border-radius: 6px; color: white; font-weight: bold; line-height: 35px; cursor: pointer; margin: 2px; position: relative; }
+.grade-popup { position: absolute; background: white; border: 1px solid #dcdde1; padding: 6px 10px; border-radius: 6px; top: 40px; left: 0; display: none; z-index: 100; width: max-content; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -32,11 +32,11 @@
 <header>
 <h1>Електронен Дневник</h1>
 <nav id="menu" style="display:none;">
-    <button onclick="showSection('students')">Ученици</button>
-    <button onclick="showSection('subjects')">Предмети и програма</button>
-    <button onclick="showSection('grades')">Оценки/Похвали/Забележки</button>
-    <button onclick="showSection('journal')">Дневник</button>
-    <button onclick="logout()">Изход</button>
+<button onclick="showSection('students')">Ученици</button>
+<button onclick="showSection('subjects')">Предмети и програма</button>
+<button onclick="showSection('grades')">Оценки/Похвали/Забележки</button>
+<button onclick="showSection('journal')">Дневник</button>
+<button onclick="logout()">Изход</button>
 </nav>
 </header>
 
@@ -148,7 +148,7 @@ const table=document.getElementById('scheduleTable').tBodies[0]; let idx=0;
 for(let row=0;row<6;row++){ for(let col=1;col<=3;col++){ table.rows[row].cells[col].textContent = schedule[idx++]||''; } }
 }
 
-// --- Оценки/похвали/забележки ---
+// --- Оценки ---
 function addEntry(){
 const studentId=document.getElementById('studentSelect').value;
 const subjectId=document.getElementById('subjectSelect').value;
@@ -179,8 +179,7 @@ for(let eId in entries){ const entry=entries[eId]; if(entry.type==='grade') grad
 grades.forEach(g=>{
 const box=document.createElement('div'); box.className='grade-box'; box.textContent=g.value; box.style.background=colorGrade(g.value);
 const popup=document.createElement('div'); popup.className='grade-popup'; popup.innerHTML=`Стойност: ${g.value}<br>Причина: ${g.reason}`;
-box.onclick=()=>{ popup.style.display=popup.style.display==='block'?'none':'block'; };
-box.appendChild(popup); tdGrade.appendChild(box);
+box.onclick=()=>{ popup.style.display=popup.style.display==='block'?'none':'block'; }; box.appendChild(popup); tdGrade.appendChild(box);
 });
 tdPraise.textContent=praises.join(', '); tdRemark.textContent=remarks.join(', '); tr.appendChild(tdGrade); tr.appendChild(tdPraise); tr.appendChild(tdRemark);
 });}
@@ -189,14 +188,12 @@ table.appendChild(tr);
 });});
 }
 
-function colorGrade(value){
-value=parseInt(value);
+function colorGrade(value){ value=parseInt(value);
 if(value>=5) return '#44bd32';
 if(value==4) return '#fbc531';
 if(value==3) return '#e1b12c';
 if(value==2) return '#e84118';
-return '#7f8fa6';
-}
+return '#7f8fa6'; }
 
 function showSection(id){ ['students','subjects','grades','journal'].forEach(sec=>document.getElementById(sec).style.display=sec===id?'block':'none'); }
 auth.onAuthStateChanged(user=>{ if(user){ document.getElementById('auth').style.display='none'; document.getElementById('menu').style.display='block';
