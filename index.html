@@ -23,8 +23,10 @@ button.action{
   background:#2563eb;color:#fff;border:none;
   padding:10px;border-radius:6px;cursor:pointer
 }
-button.action:hover{opacity:.9}
-
+button.danger{
+  background:#dc2626;color:#fff;border:none;
+  padding:5px 8px;border-radius:6px;cursor:pointer
+}
 table{width:100%;border-collapse:collapse}
 th,td{border:1px solid #e5e7eb;padding:6px;text-align:center}
 th{background:#e5e7eb}
@@ -32,7 +34,8 @@ th{background:#e5e7eb}
 .grade{
   display:inline-block;padding:4px 7px;
   border-radius:5px;color:#fff;
-  font-weight:bold;cursor:pointer;margin:2px
+  font-weight:bold;cursor:pointer;margin:2px;
+  background:#2563eb
 }
 .avg{display:block;font-size:12px;color:#000;margin-top:4px}
 </style>
@@ -52,7 +55,6 @@ th{background:#e5e7eb}
 
 <div class="container">
 
-<!-- AUTH -->
 <div id="auth" class="card">
 <h3>Вход / Регистрация</h3>
 <input id="email" placeholder="Имейл">
@@ -61,7 +63,6 @@ th{background:#e5e7eb}
 <button class="action" onclick="login()">Вход</button>
 </div>
 
-<!-- STUDENTS -->
 <div id="students" class="card hidden">
 <h3>Ученици</h3>
 <input id="studentName" placeholder="Име на ученик">
@@ -69,7 +70,6 @@ th{background:#e5e7eb}
 <ul id="studentList"></ul>
 </div>
 
-<!-- SUBJECTS + PROGRAM -->
 <div id="subjects" class="card hidden">
 <h3>Предмети</h3>
 <input id="subjectName" placeholder="Предмет">
@@ -82,7 +82,6 @@ th{background:#e5e7eb}
 <table id="programTable"></table>
 </div>
 
-<!-- ENTRY -->
 <div id="entry" class="card hidden">
 <h3>Въвеждане</h3>
 <select id="eStudent"></select>
@@ -93,11 +92,10 @@ th{background:#e5e7eb}
   <option value="note">Забележка</option>
 </select>
 <input id="eValue" placeholder="Оценка (2-6)">
-<input id="eReason" placeholder="Причина (тест, ДЗ…)">
+<input id="eReason" placeholder="Причина">
 <button class="action" onclick="addEntry()">Запази</button>
 </div>
 
-<!-- DIARY -->
 <div id="diary" class="card hidden">
 <h3>Дневник</h3>
 <table id="diaryTable"></table>
@@ -107,165 +105,122 @@ th{background:#e5e7eb}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import {
-  getAuth, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import {
-  getDatabase, ref, set, get, update
-} from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
 
-/* FIREBASE CONFIG */
 const firebaseConfig = {
-  apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
-  authDomain: "dnevnik2-42909.firebaseapp.com",
-  databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "dnevnik2-42909",
-  storageBucket: "dnevnik2-42909.firebasestorage.app",
-  messagingSenderId: "824393263608",
-  appId: "1:824393263608:web:eb35cff1cab09a16eace0d"
+ apiKey:"AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
+ authDomain:"dnevnik2-42909.firebaseapp.com",
+ databaseURL:"https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
+ projectId:"dnevnik2-42909",
+ storageBucket:"dnevnik2-42909.firebasestorage.app",
+ messagingSenderId:"824393263608",
+ appId:"1:824393263608:web:eb35cff1cab09a16eace0d"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getDatabase(app);
 
-/* STATE */
 let uid=null;
-let data={
-  students:{},
-  subjects:{},
-  program:[],
-  diary:{}
-};
+let data={students:{},subjects:{},program:[],diary:{}};
 
-/* AUTH STATE */
-onAuthStateChanged(auth,user=>{
-  if(user){
-    uid=user.uid;
-    load();
-    document.getElementById("menu").classList.remove("hidden");
-    show("students");
-  }else{
-    uid=null;
-    show("auth");
-  }
+onAuthStateChanged(auth,u=>{
+ if(u){uid=u.uid;load();menu.classList.remove("hidden");show("students");}
+ else show("auth");
 });
 
-/* AUTH */
 window.register=()=>createUserWithEmailAndPassword(auth,email.value,password.value);
 window.login=()=>signInWithEmailAndPassword(auth,email.value,password.value);
 window.logout=()=>signOut(auth);
 
-/* DATA */
-function save(){
-  update(ref(db,"dnevnik/"+uid),data);
-}
+function save(){ set(ref(db,"dnevnik/"+uid),data); }
 function load(){
-  get(ref(db,"dnevnik/"+uid)).then(s=>{
-    if(s.exists()) data=s.val();
-    renderAll();
-  });
+ get(ref(db,"dnevnik/"+uid)).then(s=>{
+  if(s.exists()) data=s.val();
+  renderAll();
+ });
 }
 
-/* UI */
 window.show=id=>{
  document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
  document.getElementById(id).classList.remove("hidden");
 };
 
-/* STUDENTS */
 window.addStudent=()=>{
- if(!studentName.value)return;
- data.students[studentName.value]={};
+ const n=studentName.value.trim();
+ if(!n)return;
+ data.students[n]=true;
+ data.diary[n]={};
+ Object.keys(data.subjects).forEach(s=>{
+  data.diary[n][s]={grades:[],praises:[],notes:[]};
+ });
  studentName.value="";
  save();renderAll();
 };
 
-/* SUBJECTS */
 window.addSubject=()=>{
- const n=subjectName.value;
+ const n=subjectName.value.trim();
  const h=+subjectHours.value;
  if(!n||!h)return;
  data.subjects[n]=h;
+ Object.keys(data.students).forEach(st=>{
+  data.diary[st]??={};
+  data.diary[st][n]={grades:[],praises:[],notes:[]};
+ });
  subjectName.value=subjectHours.value="";
  save();renderAll();
 };
 
-/* PROGRAM */
 window.generateProgram=()=>{
  let total=Object.values(data.subjects).reduce((a,b)=>a+b,0);
  if(total!==18)return alert("Часовете трябва да са 18");
  let pool=[];
  Object.entries(data.subjects).forEach(([s,h])=>{
-  for(let i=0;i<h;i++) pool.push(s);
+  for(let i=0;i<h;i++)pool.push(s);
  });
  pool.sort(()=>Math.random()-0.5);
  data.program=[[],[],[]];
- for(let d=0;d<3;d++)for(let h=0;h<6;h++)
-  data.program[d][h]=pool.pop();
+ for(let d=0;d<3;d++)for(let h=0;h<6;h++)data.program[d][h]=pool.pop();
  save();renderAll();
 };
 
-/* ENTRY */
 window.addEntry=()=>{
- const st=eStudent.value;
- const sb=eSubject.value;
+ const st=eStudent.value,sb=eSubject.value;
  if(!st||!sb)return;
- data.diary[st]??={};
- data.diary[st][sb]??={grades:[],praises:[],notes:[]};
- if(eType.value==="grade"){
-  data.diary[st][sb].grades.push({
-    value:+eValue.value,reason:eReason.value
-  });
- }else if(eType.value==="praise"){
-  data.diary[st][sb].praises.push(eReason.value);
- }else{
-  data.diary[st][sb].notes.push(eReason.value);
- }
+ let d=data.diary[st][sb];
+ if(eType.value==="grade")
+  d.grades.push({value:+eValue.value});
+ if(eType.value==="praise") d.praises.push(eReason.value);
+ if(eType.value==="note") d.notes.push(eReason.value);
  eValue.value=eReason.value="";
  save();renderAll();
 };
 
-/* RENDER */
 function renderAll(){
  studentList.innerHTML=Object.keys(data.students)
   .map(s=>`<li>${s}</li>`).join("");
-
  subjectList.innerHTML=Object.entries(data.subjects)
   .map(([s,h])=>`<li>${s} – ${h}ч</li>`).join("");
-
- eStudent.innerHTML=Object.keys(data.students)
-  .map(s=>`<option>${s}</option>`).join("");
- eSubject.innerHTML=Object.keys(data.subjects)
-  .map(s=>`<option>${s}</option>`).join("");
-
- renderDiary();
- renderProgram();
+ eStudent.innerHTML=Object.keys(data.students).map(s=>`<option>${s}</option>`).join("");
+ eSubject.innerHTML=Object.keys(data.subjects).map(s=>`<option>${s}</option>`).join("");
+ renderProgram(); renderDiary();
 }
 
 function renderProgram(){
- programTable.innerHTML="";
- if(!data.program.length)return;
+ if(!data.program.length)return programTable.innerHTML="";
  let h="<tr><th>Час</th><th>Ден 1</th><th>Ден 2</th><th>Ден 3</th></tr>";
- for(let i=0;i<6;i++){
-  h+=`<tr><td>${i+1}</td>
-   <td>${data.program[0][i]}</td>
-   <td>${data.program[1][i]}</td>
-   <td>${data.program[2][i]}</td></tr>`;
- }
+ for(let i=0;i<6;i++)
+  h+=`<tr><td>${i+1}</td><td>${data.program[0][i]}</td><td>${data.program[1][i]}</td><td>${data.program[2][i]}</td></tr>`;
  programTable.innerHTML=h;
 }
 
 function renderDiary(){
- let t=document.getElementById("diaryTable");
- let subs=Object.keys(data.subjects);
+ const t=diaryTable;
+ const subs=Object.keys(data.subjects);
  if(!subs.length)return t.innerHTML="";
  let h="<tr><th>Ученик</th>";
- subs.forEach(s=>{
-  h+=`<th colspan="3">${s}</th>`;
- });
+ subs.forEach(s=>h+=`<th colspan="3">${s}</th>`);
  h+="</tr><tr><th></th>";
  subs.forEach(()=>h+="<th>Оценки</th><th>Похвали</th><th>Забележки</th>");
  h+="</tr>";
@@ -273,10 +228,8 @@ function renderDiary(){
  Object.keys(data.students).forEach(st=>{
   b+=`<tr><td>${st}</td>`;
   subs.forEach(sb=>{
-   let d=data.diary[st]?.[sb]||{grades:[],praises:[],notes:[]};
-   let avg=d.grades.length
-     ?(d.grades.reduce((a,g)=>a+g.value,0)/d.grades.length).toFixed(2)
-     :"–";
+   let d=data.diary[st][sb];
+   let avg=d.grades.length?(d.grades.reduce((a,g)=>a+g.value,0)/d.grades.length).toFixed(2):"–";
    b+=`<td>${d.grades.map(g=>`<span class="grade">${g.value}</span>`).join("")}
         <div class="avg">Среден: ${avg}</div></td>
         <td>${d.praises.join("<br>")}</td>
