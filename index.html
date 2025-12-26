@@ -16,7 +16,7 @@ nav button:hover{background:#475569}
 input,select,textarea{width:100%;padding:10px;margin:6px 0;border-radius:6px;border:1px solid #cbd5e1}
 button.action{background:#2563eb;color:#fff;border:none;padding:10px;border-radius:6px;cursor:pointer}
 button.action:hover{opacity:.9}
-table{width:100%;border-collapse:collapse}
+table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border:1px solid #e5e7eb;padding:8px;text-align:center}
 th{background:#e5e7eb}
 .grade{padding:4px 7px;border-radius:5px;color:#fff;font-weight:bold}
@@ -30,6 +30,7 @@ th{background:#e5e7eb}
 <button onclick="showSection('students')">Ученици</button>
 <button onclick="showSection('input')">Въвеждане</button>
 <button onclick="showSection('diary')">Дневник</button>
+<button onclick="showSection('program')">Програма</button>
 <button onclick="logout()">Изход</button>
 </nav>
 
@@ -77,6 +78,18 @@ th{background:#e5e7eb}
 </table>
 </div>
 
+<!-- PROGRAM -->
+<div id="program" class="card hidden">
+<h3>Седмична програма</h3>
+<input id="programSubject" placeholder="Предмет">
+<input id="programHours" type="number" placeholder="Часове седмично">
+<button class="action" onclick="addProgram()">Добави/Редактирай предмет</button>
+<table>
+<thead><tr><th>Предмет</th><th>Часове</th></tr></thead>
+<tbody id="programTable"></tbody>
+</table>
+</div>
+
 </div>
 
 <script type="module">
@@ -100,9 +113,10 @@ const db = getDatabase(app);
 let uid = null;
 let students = {};
 let subjects = ["Математика","БЕЛ"];
-let entries = {}; // structure: entries[student][subject] = {grades:[],remarks:[],praises:[]}
+let entries = {}; 
+let program = {}; // {subject:hours}
 
-// UI helper
+// UI elements
 const emailEl = document.getElementById("email");
 const passwordEl = document.getElementById("password");
 const studentNameEl = document.getElementById("studentName");
@@ -111,7 +125,10 @@ const subjectSelect = document.getElementById("subjectSelect");
 const gradeEl = document.getElementById("grade");
 const textEl = document.getElementById("text");
 const entryTypeEl = document.getElementById("entryType");
+const programSubjectEl = document.getElementById("programSubject");
+const programHoursEl = document.getElementById("programHours");
 
+// Show section
 window.showSection = id => {
  if(!uid && id!=="auth") return alert("Първо влез!");
  document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
@@ -119,14 +136,15 @@ window.showSection = id => {
  render();
 };
 
-// AUTH
+// Auth
 window.register = () => {
  if(!emailEl.value || !passwordEl.value) return alert("Попълнете имейл и парола");
  createUserWithEmailAndPassword(auth,emailEl.value,passwordEl.value)
  .then(u=>{
    uid=u.user.uid;
-   students={}; entries={};
-   set(ref(db,"diary/"+uid),{students,subjects,entries}).then(()=>showSection('students'));
+   students={}; entries={}; program={};
+   saveAll();
+   showSection('students');
  })
  .catch(e=>alert(e.message));
 };
@@ -136,7 +154,7 @@ window.login = () => {
  signInWithEmailAndPassword(auth,emailEl.value,passwordEl.value)
  .then(u=>{
    uid=u.user.uid;
-   load();
+   loadAll();
    showSection('students');
  })
  .catch(e=>alert(e.message));
@@ -144,23 +162,25 @@ window.login = () => {
 
 window.logout = () => signOut(auth).then(()=>location.reload());
 
-// DATABASE
-function save() {
- set(ref(db,"diary/"+uid),{students,subjects,entries});
+// Save/load
+function saveAll() {
+ set(ref(db,"diary/"+uid),{students,subjects,entries,program});
 }
 
-function load() {
+function loadAll() {
  get(ref(db,"diary/"+uid)).then(s=>{
    if(s.exists()){
-     students = s.val().students||{};
-     subjects = s.val().subjects||subjects;
-     entries = s.val().entries||{};
+     const data=s.val();
+     students = data.students||{};
+     subjects = data.subjects||subjects;
+     entries = data.entries||{};
+     program = data.program||{};
    }
    render();
-});
+ });
 }
 
-// ACTIONS
+// Actions
 window.addStudent = () => {
  const name = studentNameEl.value.trim();
  if(!name) return;
@@ -170,7 +190,7 @@ window.addStudent = () => {
    entries[name][sub]={grades:[],remarks:[],praises:[]};
  });
  studentNameEl.value="";
- save();
+ saveAll();
  render();
 };
 
@@ -197,11 +217,27 @@ window.addEntry = () => {
    entries[st][sb].praises.push(textEl.value);
    textEl.value="";
  }
- save();
+ saveAll();
  render();
 };
 
-// RENDER
+// Program
+window.addProgram = () => {
+ const sub = programSubjectEl.value.trim();
+ const hrs = parseInt(programHoursEl.value);
+ if(!sub || !hrs) return;
+ program[sub] = hrs;
+ if(!subjects.includes(sub)) subjects.push(sub);
+ for(let st in students){
+   if(!entries[st][sub]) entries[st][sub]={grades:[],remarks:[],praises:[]};
+ }
+ programSubjectEl.value="";
+ programHoursEl.value="";
+ saveAll();
+ render();
+};
+
+// Render
 function render() {
  // student list
  document.getElementById("studentList").innerHTML = Object.keys(students).map(s=>`<li>${s}</li>`).join("");
@@ -214,9 +250,9 @@ function render() {
  thead.innerHTML="<tr><th>Ученик</th>"+subjects.map(s=>`<th>${s}</th>`).join("")+"</tr>";
  tbody.innerHTML=Object.keys(students).map(st=>{
    return "<tr><td>"+st+"</td>"+subjects.map(sb=>{
-     const gs = entries[st][sb].grades||[];
-     const rs = entries[st][sb].remarks||[];
-     const ps = entries[st][sb].praises||[];
+     const gs = entries[st][sb]?.grades||[];
+     const rs = entries[st][sb]?.remarks||[];
+     const ps = entries[st][sb]?.praises||[];
      const gHtml = gs.map(g=>{
        const color={2:"#dc2626",3:"#ea580c",4:"#ca8a04",5:"#2563eb",6:"#16a34a"}[g]||"#64748b";
        return `<span class="grade" style="background:${color}">${g}</span>`;
@@ -226,6 +262,9 @@ function render() {
      return `<td>Оц: ${gHtml}<br>З: ${rHtml}<br>П: ${pHtml}</td>`;
    }).join("")+"</tr>";
  }).join("");
+ // program table
+ const progTable = document.getElementById("programTable");
+ progTable.innerHTML=Object.keys(program).map(sub=>`<tr><td>${sub}</td><td>${program[sub]}</td></tr>`).join("");
 }
 
 showSection('auth');
