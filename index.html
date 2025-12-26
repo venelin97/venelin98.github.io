@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Електронен дневник</title>
+<title>Електронен училищен дневник</title>
 <style>
 body{margin:0;font-family:Segoe UI;background:#f1f5f9}
 header{background:#1e293b;color:#fff;padding:15px;text-align:center;font-size:22px}
@@ -14,12 +14,13 @@ nav button:hover{background:#475569}
 .card{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px;box-shadow:0 5px 15px rgba(0,0,0,.1)}
 .hidden{display:none}
 input,select,textarea{width:100%;padding:10px;margin:6px 0;border-radius:6px;border:1px solid #cbd5e1}
-button.action{background:#2563eb;color:#fff;border:none;padding:10px;border-radius:6px;cursor:pointer}
+button.action{background:#2563eb;color:#fff;border:none;padding:10px;border-radius:6px;cursor:pointer;margin-top:5px}
 button.action:hover{opacity:.9}
 table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border:1px solid #e5e7eb;padding:8px;text-align:center}
 th{background:#e5e7eb}
 .grade{padding:4px 7px;border-radius:5px;color:#fff;font-weight:bold}
+textarea{resize:none}
 </style>
 </head>
 <body>
@@ -57,37 +58,46 @@ th{background:#e5e7eb}
 <div id="input" class="card hidden">
 <h3>Въвеждане на информация</h3>
 <select id="studentSelect"></select>
-<select id="subjectSelect"></select>
 <select id="entryType">
-<option value="grade">Оценка</option>
-<option value="remark">Забележка</option>
-<option value="praise">Похвала</option>
+  <option value="grade">Оценка</option>
+  <option value="remark">Забележка</option>
+  <option value="praise">Похвала</option>
 </select>
-
-<input id="grade" type="number" min="2" max="6" placeholder="Оценка">
-<textarea id="text" placeholder="Текст" class="hidden"></textarea>
+<select id="subjectSelect"></select>
+<div id="gradeBox">
+<input id="gradeValue" type="number" min="2" max="6" placeholder="Оценка">
+<input id="gradeAuthor" placeholder="От кого">
+<input id="gradeReason" placeholder="Основание">
+</div>
+<textarea id="textValue" class="hidden" placeholder="Текст"></textarea>
 <button class="action" onclick="addEntry()">Запази</button>
 </div>
 
 <!-- DIARY -->
 <div id="diary" class="card hidden">
 <h3>Дневник</h3>
+<div class="table-wrap">
 <table>
-<thead id="thead"></thead>
-<tbody id="tbody"></tbody>
+<thead id="diaryHead"></thead>
+<tbody id="diaryBody"></tbody>
 </table>
+</div>
 </div>
 
 <!-- PROGRAM -->
 <div id="program" class="card hidden">
 <h3>Седмична програма</h3>
-<input id="programSubject" placeholder="Предмет">
-<input id="programHours" type="number" placeholder="Часове седмично">
-<button class="action" onclick="addProgram()">Добави/Редактирай предмет</button>
+<input id="subjectName" placeholder="Предмет">
+<input id="subjectHours" type="number" placeholder="Часове седмично">
+<button class="action" onclick="addSubject()">Добави/Редактирай предмет</button>
+<div class="table-wrap">
 <table>
-<thead><tr><th>Предмет</th><th>Часове</th></tr></thead>
+<thead>
+<tr><th>Час</th><th>Ден 1</th><th>Ден 2</th><th>Ден 3</th></tr>
+</thead>
 <tbody id="programTable"></tbody>
 </table>
+</div>
 </div>
 
 </div>
@@ -95,9 +105,9 @@ th{background:#e5e7eb}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
+import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
 
-// Firebase config
+// ===== FIREBASE CONFIG =====
 const firebaseConfig = {
  apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
  authDomain: "dnevnik2-42909.firebaseapp.com",
@@ -109,49 +119,38 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// State
+// ===== STATE =====
 let uid = null;
 let students = {};
-let subjects = ["Математика","БЕЛ"];
-let entries = {}; 
-let program = {}; // {subject:hours}
+let subjects = [];
+let program = {};
+let diary = {};
 
-// UI elements
-const emailEl = document.getElementById("email");
-const passwordEl = document.getElementById("password");
-const studentNameEl = document.getElementById("studentName");
-const studentSelect = document.getElementById("studentSelect");
-const subjectSelect = document.getElementById("subjectSelect");
-const gradeEl = document.getElementById("grade");
-const textEl = document.getElementById("text");
-const entryTypeEl = document.getElementById("entryType");
-const programSubjectEl = document.getElementById("programSubject");
-const programHoursEl = document.getElementById("programHours");
-
-// Show section
-window.showSection = id => {
- if(!uid && id!=="auth") return alert("Първо влез!");
- document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
- document.getElementById(id).classList.remove("hidden");
- render();
+// ===== UI =====
+window.showSection = id=>{
+  if(!uid && id!=="auth") return alert("Първо влез!");
+  document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  renderAll();
 };
 
-// Auth
-window.register = () => {
- if(!emailEl.value || !passwordEl.value) return alert("Попълнете имейл и парола");
- createUserWithEmailAndPassword(auth,emailEl.value,passwordEl.value)
+// ===== AUTH =====
+window.register = ()=>{
+ createUserWithEmailAndPassword(auth,email.value,password.value)
  .then(u=>{
    uid=u.user.uid;
-   students={}; entries={}; program={};
+   students={};
+   subjects=[];
+   program={day1:[],day2:[],day3:[]};
+   diary={};
    saveAll();
    showSection('students');
  })
  .catch(e=>alert(e.message));
 };
 
-window.login = () => {
- if(!emailEl.value || !passwordEl.value) return alert("Попълнете имейл и парола");
- signInWithEmailAndPassword(auth,emailEl.value,passwordEl.value)
+window.login = ()=>{
+ signInWithEmailAndPassword(auth,email.value,password.value)
  .then(u=>{
    uid=u.user.uid;
    loadAll();
@@ -160,114 +159,117 @@ window.login = () => {
  .catch(e=>alert(e.message));
 };
 
-window.logout = () => signOut(auth).then(()=>location.reload());
+window.logout = ()=>signOut(auth).then(()=>location.reload());
 
-// Save/load
-function saveAll() {
- set(ref(db,"diary/"+uid),{students,subjects,entries,program});
+// ===== DATABASE =====
+function saveAll(){
+ if(!uid) return;
+ set(ref(db,"diary/"+uid),{students,subjects,program,diary});
 }
-
-function loadAll() {
- get(ref(db,"diary/"+uid)).then(s=>{
+function loadAll(){
+ if(!uid) return;
+ get(child(ref(db),"diary/"+uid)).then(s=>{
    if(s.exists()){
-     const data=s.val();
-     students = data.students||{};
-     subjects = data.subjects||subjects;
-     entries = data.entries||{};
-     program = data.program||{};
+     students=s.val().students||{};
+     subjects=s.val().subjects||[];
+     program=s.val().program||{day1:[],day2:[],day3:[]};
+     diary=s.val().diary||{};
    }
-   render();
+   renderAll();
  });
 }
 
-// Actions
-window.addStudent = () => {
- const name = studentNameEl.value.trim();
- if(!name) return;
- students[name]={};
- subjects.forEach(sub=>{
-   if(!entries[name]) entries[name]={};
-   entries[name][sub]={grades:[],remarks:[],praises:[]};
+// ===== STUDENTS =====
+window.addStudent = ()=>{
+ let n=studentName.value.trim();
+ if(!n) return;
+ if(!students[n]) students[n]={};
+ studentName.value="";
+ saveAll();
+ renderAll();
+};
+
+// ===== SUBJECTS =====
+window.addSubject = ()=>{
+ let n=subjectName.value.trim();
+ let h=+subjectHours.value;
+ if(!n || !h) return;
+ let existing = subjects.find(s=>s.name===n);
+ if(existing) existing.hours=h;
+ else subjects.push({name:n,hours:h});
+ generateProgram();
+ subjectName.value="";
+ subjectHours.value="";
+ saveAll();
+ renderAll();
+};
+
+// ===== PROGRAM =====
+function generateProgram(){
+ let hoursArray=[];
+ subjects.forEach(s=>{
+   for(let i=0;i<s.hours;i++) hoursArray.push(s.name);
  });
- studentNameEl.value="";
+ // Случайно разпределение по дни
+ program={day1:[],day2:[],day3:[]};
+ for(let i=0;i<6;i++) program.day1[i]=hoursArray.splice(Math.floor(Math.random()*hoursArray.length),1)[0]||"";
+ for(let i=0;i<6;i++) program.day2[i]=hoursArray.splice(Math.floor(Math.random()*hoursArray.length),1)[0]||"";
+ for(let i=0;i<6;i++) program.day3[i]=hoursArray.splice(Math.floor(Math.random()*hoursArray.length),1)[0]||"";
  saveAll();
- render();
+}
+
+// ===== INPUT =====
+entryType.onchange=()=>{
+  gradeBox.classList.toggle("hidden",entryType.value!=="grade");
+  textValue.classList.toggle("hidden",entryType.value==="grade");
 };
 
-entryTypeEl.addEventListener("change",()=>{
- if(entryTypeEl.value==="grade"){ gradeEl.classList.remove("hidden"); textEl.classList.add("hidden"); }
- else { gradeEl.classList.add("hidden"); textEl.classList.remove("hidden"); }
-});
-
-window.addEntry = () => {
- const st = studentSelect.value;
- const sb = subjectSelect.value;
+window.addEntry = ()=>{
+ let st=studentSelect.value;
+ let sb=subjectSelect.value;
  if(!st || !sb) return;
- if(entryTypeEl.value==="grade"){
-   const g = parseInt(gradeEl.value);
-   if(!g) return alert("Попълнете оценка");
-   entries[st][sb].grades.push(g);
-   gradeEl.value="";
- } else if(entryTypeEl.value==="remark"){
-   if(!textEl.value) return;
-   entries[st][sb].remarks.push(textEl.value);
-   textEl.value="";
- } else {
-   if(!textEl.value) return;
-   entries[st][sb].praises.push(textEl.value);
-   textEl.value="";
+ if(!diary[st]) diary[st]={};
+ if(!diary[st][sb]) diary[st][sb]={grades:[],remarks:[],praises:[]};
+ if(entryType.value==="grade"){
+   diary[st][sb].grades.push({value:+gradeValue.value,author:gradeAuthor.value,reason:gradeReason.value});
+   gradeValue.value=""; gradeAuthor.value=""; gradeReason.value="";
+ } else if(entryType.value==="remark"){
+   diary[st][sb].remarks.push(textValue.value); textValue.value="";
+ } else{
+   diary[st][sb].praises.push(textValue.value); textValue.value="";
  }
  saveAll();
- render();
+ renderAll();
 };
 
-// Program
-window.addProgram = () => {
- const sub = programSubjectEl.value.trim();
- const hrs = parseInt(programHoursEl.value);
- if(!sub || !hrs) return;
- program[sub] = hrs;
- if(!subjects.includes(sub)) subjects.push(sub);
- for(let st in students){
-   if(!entries[st][sub]) entries[st][sub]={grades:[],remarks:[],praises:[]};
- }
- programSubjectEl.value="";
- programHoursEl.value="";
- saveAll();
- render();
-};
+// ===== RENDER =====
+function renderAll(){
+ // Students
+ studentList.innerHTML=Object.keys(students).map(s=>`<li>${s}</li>`).join("");
+ studentSelect.innerHTML=Object.keys(students).map(s=>`<option>${s}</option>`).join("");
+ subjectSelect.innerHTML=subjects.map(s=>`<option>${s.name}</option>`).join("");
 
-// Render
-function render() {
- // student list
- document.getElementById("studentList").innerHTML = Object.keys(students).map(s=>`<li>${s}</li>`).join("");
- // dropdowns
- studentSelect.innerHTML = Object.keys(students).map(s=>`<option>${s}</option>`).join("");
- subjectSelect.innerHTML = subjects.map(s=>`<option>${s}</option>`).join("");
- // diary
- const thead = document.getElementById("thead");
- const tbody = document.getElementById("tbody");
- thead.innerHTML="<tr><th>Ученик</th>"+subjects.map(s=>`<th>${s}</th>`).join("")+"</tr>";
- tbody.innerHTML=Object.keys(students).map(st=>{
+ // Diary
+ diaryHead.innerHTML="<tr><th>Ученик</th>"+subjects.map(s=>`<th>${s.name}</th>`).join("")+"</tr>";
+ diaryBody.innerHTML=Object.keys(students).map(st=>{
    return "<tr><td>"+st+"</td>"+subjects.map(sb=>{
-     const gs = entries[st][sb]?.grades||[];
-     const rs = entries[st][sb]?.remarks||[];
-     const ps = entries[st][sb]?.praises||[];
-     const gHtml = gs.map(g=>{
-       const color={2:"#dc2626",3:"#ea580c",4:"#ca8a04",5:"#2563eb",6:"#16a34a"}[g]||"#64748b";
-       return `<span class="grade" style="background:${color}">${g}</span>`;
-     }).join(" ");
-     const rHtml = rs.join("<br>")||"-";
-     const pHtml = ps.join("<br>")||"-";
-     return `<td>Оц: ${gHtml}<br>З: ${rHtml}<br>П: ${pHtml}</td>`;
+     let d=diary[st][sb];
+     let gradesHTML = d?.grades.map(g=>`<span class="grade" style="background:${{2:"#dc2626",3:"#ea580c",4:"#ca8a04",5:"#2563eb",6:"#16a34a"}[g.value]||"#64748b"}">${g.value}</span>`).join("")||"-";
+     let remarksHTML=d?.remarks.join("<br>")||"-";
+     let praisesHTML=d?.praises.join("<br>")||"-";
+     return `<td>Оц: ${gradesHTML}<br>З: ${remarksHTML}<br>П: ${praisesHTML}</td>`;
    }).join("")+"</tr>";
  }).join("");
- // program table
- const progTable = document.getElementById("programTable");
- progTable.innerHTML=Object.keys(program).map(sub=>`<tr><td>${sub}</td><td>${program[sub]}</td></tr>`).join("");
+
+ // Program
+ let tableHTML="";
+for(let i=0;i<6;i++){
+  tableHTML+=`<tr><td>${i+1}</td><td contenteditable="true">${program.day1[i]||""}</td><td contenteditable="true">${program.day2[i]||""}</td><td contenteditable="true">${program.day3[i]||""}</td></tr>`;
+}
+programTable.innerHTML=tableHTML;
 }
 
-showSection('auth');
+showSection("auth");
 </script>
 
 </body>
