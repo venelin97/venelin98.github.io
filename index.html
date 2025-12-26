@@ -165,8 +165,15 @@ function loginUser(){
   if(!email || !pass) return alert("Попълни email и парола");
 
   auth.signInWithEmailAndPassword(email, pass)
-      .then(u=> loginAfter(u.user.uid))
-      .catch(err=> alert(err.message));
+      .then(u => loginAfter(u.user.uid))
+      .catch(err => {
+          if(err.code === "auth/user-not-found"){
+              // автоматично създаваме акаунт, ако няма такъв
+              registerUser();
+          } else {
+              alert(err.message);
+          }
+      });
 }
 
 function loginAfter(uid){
@@ -325,4 +332,5 @@ showSection('authSection');
 </script>
 </body>
 </html>
+
 
