@@ -29,9 +29,9 @@ th{background:#e5e7eb}
 <header>📘 Електронен училищен дневник</header>
 
 <nav>
-<button onclick="show('students')">Ученици</button>
-<button onclick="show('input')">Въвеждане</button>
-<button onclick="show('diary')">Дневник</button>
+<button onclick="showSection('students')">Ученици</button>
+<button onclick="showSection('input')">Въвеждане</button>
+<button onclick="showSection('diary')">Дневник</button>
 <button onclick="logout()">Изход</button>
 </nav>
 
@@ -49,7 +49,7 @@ th{background:#e5e7eb}
 <!-- STUDENTS -->
 <div id="students" class="card hidden">
 <h3>Ученици</h3>
-<input id="studentName" placeholder="Име">
+<input id="studentName" placeholder="Име на ученик">
 <button class="action" onclick="addStudent()">Добави ученик</button>
 <ul id="studentList"></ul>
 </div>
@@ -79,6 +79,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebas
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
 import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
 
+/* ===== FIREBASE CONFIG ===== */
 const firebaseConfig = {
  apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
  authDomain: "dnevnik2-42909.firebaseapp.com",
@@ -87,58 +88,74 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
+const auth = getAuth(app);
 const db = getDatabase(app);
 
-let uid=null;
-let students={};
-let subjects=["Математика","БЕЛ"];
-let grades={};
+/* ===== STATE ===== */
+let uid = null;
+let students = {};
+let subjects = ["Математика","БЕЛ"];
+let grades = {};
 
 /* ===== UI ===== */
-window.show = id=>{
- if(!uid && id!=="auth") return alert("Първо влез!");
- document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
- document.getElementById(id).classList.remove('hidden');
+window.showSection = id => {
+ if(!uid && id !== "auth") return alert("Първо влез!");
+ document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"));
+ document.getElementById(id).classList.remove("hidden");
  render();
 };
 
 /* ===== AUTH ===== */
-window.register = ()=>{
+window.register = () => {
  createUserWithEmailAndPassword(auth,email.value,password.value)
- .then(u=>{uid=u.user.uid;save();show("students")})
+ .then(u=>{
+   uid=u.user.uid;
+   save();
+   showSection("students");
+ })
  .catch(e=>alert(e.message));
 };
 
-window.login = ()=>{
+window.login = () => {
  signInWithEmailAndPassword(auth,email.value,password.value)
- .then(u=>{uid=u.user.uid;load();show("students")})
+ .then(u=>{
+   uid=u.user.uid;
+   load();
+   showSection("students");
+ })
  .catch(e=>alert(e.message));
 };
 
-window.logout=()=>signOut(auth).then(()=>location.reload());
+window.logout = () => signOut(auth).then(()=>location.reload());
 
-/* ===== DATA ===== */
+/* ===== DATABASE ===== */
 function save(){
  set(ref(db,"diary/"+uid),{students,subjects,grades});
 }
+
 function load(){
  get(ref(db,"diary/"+uid)).then(s=>{
-  if(s.exists()){({students,subjects,grades}=s.val())}
+  if(s.exists()){
+   students=s.val().students||{};
+   subjects=s.val().subjects||subjects;
+   grades=s.val().grades||{};
+  }
   render();
  });
 }
 
 /* ===== ACTIONS ===== */
-window.addStudent=()=>{
+window.addStudent = () => {
+ if(!studentName.value) return;
  students[studentName.value]={};
  studentName.value="";
  save();render();
 };
 
-window.addGrade=()=>{
+window.addGrade = () => {
  const st=studentSelect.value;
  const sb=subjectSelect.value;
+ if(!st || !sb || !grade.value) return;
  grades[st]??={};
  grades[st][sb]=grade.value;
  grade.value="";
@@ -152,15 +169,17 @@ function render(){
  subjectSelect.innerHTML=subjects.map(s=>`<option>${s}</option>`).join("");
 
  thead.innerHTML="<tr><th>Ученик</th>"+subjects.map(s=>`<th>${s}</th>`).join("")+"</tr>";
+
  tbody.innerHTML=Object.keys(students).map(st=>{
   return "<tr><td>"+st+"</td>"+subjects.map(sb=>{
    let g=grades[st]?.[sb]||"";
-   return `<td><span class="grade">${g}</span></td>`;
+   let color={2:"#dc2626",3:"#ea580c",4:"#ca8a04",5:"#2563eb",6:"#16a34a"}[g]||"#64748b";
+   return `<td><span class="grade" style="background:${color}">${g}</span></td>`;
   }).join("")+"</tr>";
  }).join("");
 }
 
-show("auth");
+showSection("auth");
 </script>
 
 </body>
