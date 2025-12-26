@@ -219,7 +219,7 @@ function addEntry(){
     const subjectId = document.getElementById('subjectSelect').value;
     const type = document.getElementById('typeSelect').value;
     const valueInput = document.getElementById('valueInput')?.value || '';
-    const reason = document.getElementById('reasonInput')?.value || '';
+    const reasonInput = document.getElementById('reasonInput')?.value || '';
     if(!studentId || !subjectId || (type==='grade' && !valueInput)) return;
     const id = Date.now();
     
@@ -227,7 +227,7 @@ function addEntry(){
         id, 
         type, 
         value: (type==='grade'?valueInput:'-'), 
-        reason: (type==='grade'?reason:valueInput), 
+        reason: (type==='grade'?reasonInput:valueInput),  // <- похвали/забележки отиват в reason
         teacher: auth.currentUser.email 
     };
     
@@ -237,61 +237,88 @@ function addEntry(){
     loadJournal();
 }
 
+
 // Дневник
 function loadJournal(){
     db.ref('students').once('value').then(snapS=>{
         const students = snapS.val() || {};
         db.ref('subjects').once('value').then(snapSub=>{
             const subjects = snapSub.val() || {};
-            const table = document.getElementById('journalTable'); table.innerHTML='';
-            
-            const header = document.createElement('tr'); header.innerHTML='<th>Ученик</th>';
+            const table = document.getElementById('journalTable'); 
+            table.innerHTML='';
+
+            // Заглавен ред
+            const header = document.createElement('tr'); 
+            header.innerHTML='<th>Ученик</th>';
             for(let id in subjects) header.innerHTML += `<th colspan="3">${subjects[id].name}</th>`;
             table.appendChild(header);
-            
-            const subHeader = document.createElement('tr'); subHeader.innerHTML='<th></th>';
+
+            // Подзаглавия
+            const subHeader = document.createElement('tr'); 
+            subHeader.innerHTML='<th></th>';
             for(let id in subjects) subHeader.innerHTML += '<th>Оценки</th><th>Похвали</th><th>Забележки</th>';
             table.appendChild(subHeader);
-            
+
+            // Редове с ученици
             for(let sId in students){
-                const tr = document.createElement('tr'); tr.innerHTML = `<td>${students[sId].name}</td>`;
+                const tr = document.createElement('tr'); 
+                tr.innerHTML = `<td>${students[sId].name}</td>`;
+
                 for(let subId in subjects){
                     const tdGrade=document.createElement('td');
                     const tdPraise=document.createElement('td');
                     const tdRemark=document.createElement('td');
-                    
+
                     db.ref(`entries/${sId}/${subId}`).once('value').then(snapE=>{
                         const entries = snapE.val() || {};
                         tdGrade.innerHTML=''; tdPraise.innerHTML=''; tdRemark.innerHTML='';
-                    
+
                         for(let eId in entries){
                             const entry = entries[eId];
-                            const box = document.createElement('div'); box.className='grade-box';
+                            const box = document.createElement('div'); 
+                            box.className='grade-box';
                             box.textContent = entry.type==='grade' ? entry.value : (entry.type==='praise' ? 'П' : 'З');
                             box.style.background = entry.type==='grade' ? colorGrade(entry.value) : (entry.type==='praise'?'#3498db':'#e67e22');
-                            
-                            const popup=document.createElement('div'); 
-                            popup.className='grade-popup';
+
+                            // Popup за подробности
+                            const popup = document.createElement('div');
+                            popup.className = 'grade-popup';
                             popup.innerHTML = `
                                 <div style="text-align:right;"><span class="close-popup">&times;</span></div>
-                                <div><strong>Причина / Текст:</strong> ${entry.reason || entry.value}</div>
+                                <div><strong>Причина:</strong> ${entry.reason}</div>
                                 <button>Изтрий</button>
                             `;
-                            popup.querySelector('.close-popup').onclick = (e)=>{ e.stopPropagation(); popup.style.display='none'; }
+
+                            // Затваряне на popup
+                            popup.querySelector('.close-popup').onclick = (e)=>{
+                                e.stopPropagation();
+                                popup.style.display = 'none';
+                            };
+
+                            // Изтриване на запис
                             popup.querySelector('button').onclick = (e)=>{
                                 e.stopPropagation();
                                 db.ref(`entries/${sId}/${subId}/${entry.id}`).remove().then(()=>loadJournal());
+                            };
+
+                            // Покажи/скрий popup при клик
+                            box.onclick = ()=>{
+                                popup.style.display = popup.style.display==='block'?'none':'block';
                             }
-                            box.onclick = ()=>{ popup.style.display = popup.style.display==='block'?'none':'block'; }
+
                             box.appendChild(popup);
-                            
+
                             if(entry.type==='grade') tdGrade.appendChild(box);
                             else if(entry.type==='praise') tdPraise.appendChild(box);
                             else tdRemark.appendChild(box);
                         }
-                        tr.appendChild(tdGrade); tr.appendChild(tdPraise); tr.appendChild(tdRemark);
+
+                        tr.appendChild(tdGrade); 
+                        tr.appendChild(tdPraise); 
+                        tr.appendChild(tdRemark);
                     });
                 }
+
                 table.appendChild(tr);
             }
         });
@@ -313,3 +340,4 @@ auth.onAuthStateChanged(user=>{
 </script>
 </body>
 </html>
+
