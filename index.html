@@ -127,7 +127,7 @@ function login(){
     const email=document.getElementById('email').value;
     const password=document.getElementById('password').value;
     auth.signInWithEmailAndPassword(email,password)
-        .then(()=>{document.getElementById('auth').style.display='none';document.getElementById('menu').style.display='block';loadStudents();loadSubjects();loadJournal();})
+        .then(()=>{document.getElementById('auth').style.display='none';document.getElementById('menu').style.display='block';loadStudents();loadSubjects();loadJournal();updateEntryFields();})
         .catch(e=>document.getElementById('auth-msg').innerText=e.message);
 }
 function logout(){auth.signOut().then(()=>location.reload());}
@@ -223,7 +223,7 @@ function addEntry(){
     if(!studentId||!subjectId||(type==='grade'&&!value)) return;
     const id=Date.now();
     db.ref(`entries/${studentId}/${subjectId}/${id}`).set({id,type,value,reason});
-    updateEntryFields(); // ресет на полетата
+    updateEntryFields(); 
     loadJournal();
 }
 
@@ -285,10 +285,11 @@ function loadJournal(){
 function colorGrade(value){value=parseInt(value); if(value>=5)return'#44bd32'; if(value==4)return'#fbc531'; if(value==3)return'#e1b12c'; if(value==2)return'#e84118'; return'#7f8fa6';}
 
 function showSection(id){['students','subjects','grades','journal'].forEach(sec=>document.getElementById(sec).style.display=sec===id?'block':'none');}
-auth.onAuthStateChanged(user=>{if(user){document.getElementById('auth').style.display='none';document.getElementById('menu').style.display='block';loadStudents();loadSubjects();loadJournal(); updateEntryFields();}});
+auth.onAuthStateChanged(user=>{if(user){document.getElementById('auth').style.display='none';document.getElementById('menu').style.display='block';loadStudents();loadSubjects();loadJournal();updateEntryFields();}});
 </script>
 </body>
 </html>
+
 
 
 
