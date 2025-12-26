@@ -109,15 +109,16 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
 
 // ---------- FIREBASE CONFIG ----------
-const firebaseConfig = {
-  apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
-  authDomain: "dnevnik2-42909.firebaseapp.com",
-  databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "dnevnik2-42909",
-  storageBucket: "dnevnik2-42909.firebasestorage.app",
-  messagingSenderId: "824393263608",
-  appId: "1:824393263608:web:eb35cff1cab09a16eace0d"
-};
+ const firebaseConfig = {
+    apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
+    authDomain: "dnevnik2-42909.firebaseapp.com",
+    databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "dnevnik2-42909",
+    storageBucket: "dnevnik2-42909.firebasestorage.app",
+    messagingSenderId: "824393263608",
+    appId: "1:824393263608:web:eb35cff1cab09a16eace0d"
+  };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
@@ -325,5 +326,6 @@ showSection('authSection');
 </script>
 </body>
 </html>
+
 
 
