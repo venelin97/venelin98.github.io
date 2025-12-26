@@ -4,25 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Електронен училищен дневник</title>
+
 <style>
 body{margin:0;font-family:Arial;background:#f2f4f7;}
 header{background:#2c3e50;color:white;padding:15px;text-align:center;font-size:22px;}
-nav{display:flex;flex-wrap:wrap;background:#34495e;}
-nav button{flex:1;padding:12px;background:none;border:none;color:white;cursor:pointer;font-size:16px;}
+nav{display:flex;background:#34495e;}
+nav button{flex:1;padding:12px;border:none;color:white;background:none;cursor:pointer;}
 nav button:hover{background:#2c3e50;}
 .hidden{display:none;}
 .container{padding:15px;}
-.card{background:white;padding:20px;border-radius:8px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
-input,select,textarea,button{width:100%;padding:8px;margin:6px 0;border-radius:5px;border:1px solid #ccc;}
-button.action{background:#3498db;color:white;border:none;cursor:pointer;padding:10px;}
-button.action:hover{background:#2980b9;}
-.table-wrap{overflow-x:auto;}
-table{border-collapse:collapse;width:100%;}
-th,td{border:1px solid #ddd;padding:8px;text-align:center;}
-th{background:#3498db;color:white;}
-.grade{display:inline-block;padding:4px 7px;border-radius:5px;color:white;font-weight:bold;margin:2px;cursor:pointer;}
+.card{background:white;padding:20px;border-radius:8px;margin-bottom:15px;}
+input,select,textarea,button{width:100%;padding:8px;margin:6px 0;}
+button.action{background:#3498db;color:white;border:none;}
+.grade{padding:4px 6px;border-radius:4px;color:white;font-weight:bold;}
 </style>
 </head>
+
 <body>
 
 <header>📘 Електронен училищен дневник</header>
@@ -37,295 +34,131 @@ th{background:#3498db;color:white;}
 
 <div class="container">
 
-<!-- LOGIN / REGISTER -->
 <div id="authSection" class="card">
-  <h3>Регистрация / Вход</h3>
-  <input id="authEmail" placeholder="Имейл" type="email">
-  <input id="authPass" placeholder="Парола" type="password">
-  <button class="action" onclick="registerUser()">Регистрация</button>
-  <button class="action" onclick="loginUser()">Вход</button>
+<h3>Вход / Регистрация</h3>
+<input id="authEmail" type="email" placeholder="Имейл">
+<input id="authPass" type="password" placeholder="Парола">
+<button class="action" onclick="registerUser()">Регистрация</button>
+<button class="action" onclick="loginUser()">Вход</button>
 </div>
 
-<!-- УЧЕНИЦИ -->
 <div id="students" class="card hidden">
-  <h3>Добави ученик</h3>
-  <input id="newStudent" placeholder="Име на ученик">
-  <button class="action" onclick="addStudent()">Добави</button>
-  <div id="studentList"></div>
+<h3>Ученици</h3>
+<input id="newStudent" placeholder="Име">
+<button class="action" onclick="addStudent()">Добави</button>
+<div id="studentList"></div>
 </div>
 
-<!-- ВЪВЕЖДАНЕ -->
 <div id="input" class="card hidden">
-  <h3>Въвеждане</h3>
-  <select id="entryType">
-    <option value="grade">Оценка</option>
-    <option value="remark">Забележка</option>
-    <option value="praise">Похвала</option>
-  </select>
-  <input id="entryStudent" placeholder="Ученик">
-  <select id="entrySubject"></select>
-
-  <div id="gradeBox">
-    <input id="gradeValue" type="number" placeholder="Оценка (2-6)">
-    <input id="gradeAuthor" placeholder="От кого">
-    <input id="gradeReason" placeholder="Основание">
-  </div>
-
-  <textarea id="textValue" class="hidden" placeholder="Текст"></textarea>
-
-  <button class="action" onclick="addEntry()">Запази</button>
+<h3>Въвеждане</h3>
+<input id="entryStudent" placeholder="Ученик">
+<select id="entrySubject"></select>
+<input id="gradeValue" type="number" placeholder="Оценка (2–6)">
+<button class="action" onclick="addEntry()">Запази</button>
 </div>
 
-<!-- ДНЕВНИК -->
 <div id="diary" class="card hidden">
-  <h3>Дневник</h3>
-  <div class="table-wrap">
-    <table>
-      <thead id="diaryHead"></thead>
-      <tbody id="diaryBody"></tbody>
-    </table>
-  </div>
+<h3>Дневник</h3>
+<table border="1" width="100%">
+<thead id="diaryHead"></thead>
+<tbody id="diaryBody"></tbody>
+</table>
 </div>
 
-<!-- ПРОГРАМА -->
 <div id="program" class="card hidden">
-  <h3>Седмична програма</h3>
-  <input id="subjectName" placeholder="Предмет">
-  <input id="subjectHours" type="number" placeholder="Часове седмично">
-  <button class="action" onclick="addSubject()">Добави / Редактирай предмет</button>
-
-  <table>
-    <thead><tr><th>Час</th><th>Ден 1</th><th>Ден 2</th><th>Ден 3</th></tr></thead>
-    <tbody id="programTable"></tbody>
-  </table>
+<h3>Програма</h3>
+<input id="subjectName" placeholder="Предмет">
+<button class="action" onclick="addSubject()">Добави предмет</button>
+<ul id="programList"></ul>
 </div>
 
 </div>
 
-<!-- Firebase Modular SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
 
-// ---------- FIREBASE CONFIG ----------
- const firebaseConfig = {
-    apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
-    authDomain: "dnevnik2-42909.firebaseapp.com",
-    databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "dnevnik2-42909",
-    storageBucket: "dnevnik2-42909.firebasestorage.app",
-    messagingSenderId: "824393263608",
-    appId: "1:824393263608:web:eb35cff1cab09a16eace0d"
-  };
+const firebaseConfig = {
+ apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
+ authDomain: "dnevnik2-42909.firebaseapp.com",
+ databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
+ projectId: "dnevnik2-42909"
+};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
-const db = getDatabase(app);
+const db = getDatabase();
 
-let currentUid = null;
-let students = {};
-let subjects = [];
-let program = [];
+let uid=null, students={}, subjects=[];
 
-// ---------- SHOW SECTION ----------
-function showSection(id){
-  if(id !== 'authSection' && !currentUid) return alert("Моля, влезте!");
-  document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-  updateSubjectSelect();
-  renderDiary();
-  renderProgram();
-  updateStudentList();
+/* ---------- GLOBAL FUNCTIONS ---------- */
+window.showSection = (id)=>{
+ if(!uid && id!=='authSection') return alert("Влез първо");
+ document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
+ document.getElementById(id).classList.remove('hidden');
+ renderDiary();
+ renderProgram();
+};
+
+window.registerUser = ()=>{
+ createUserWithEmailAndPassword(auth, authEmail.value, authPass.value)
+ .then(u=>{ uid=u.user.uid; save(); showSection('students'); })
+ .catch(e=>alert(e.message));
+};
+
+window.loginUser = ()=>{
+ signInWithEmailAndPassword(auth, authEmail.value, authPass.value)
+ .then(u=>{ uid=u.user.uid; load(); showSection('students'); })
+ .catch(e=>alert(e.message));
+};
+
+window.logout = ()=> signOut(auth).then(()=>location.reload());
+
+window.addStudent = ()=>{
+ students[newStudent.value]={};
+ newStudent.value="";
+ save(); renderDiary();
+};
+
+window.addSubject = ()=>{
+ subjects.push(subjectName.value);
+ subjectName.value="";
+ save(); renderProgram();
+};
+
+window.addEntry = ()=>{
+ students[entryStudent.value][entrySubject.value]=(gradeValue.value);
+ save(); renderDiary();
+};
+
+/* ---------- DATA ---------- */
+function save(){
+ set(ref(db,'data/'+uid),{students,subjects});
+}
+function load(){
+ get(ref(db,'data/'+uid)).then(s=>{
+  if(s.exists()){students=s.val().students||{};subjects=s.val().subjects||[];}
+ });
 }
 
-// ---------- AUTH ----------
-window.registerUser = function(){
-  let email = document.getElementById('authEmail').value.trim();
-  let pass  = document.getElementById('authPass').value.trim();
-  if(!email || !pass) return alert("Попълни email и парола");
-
-  createUserWithEmailAndPassword(auth, email, pass)
-    .then((userCredential) => {
-      currentUid = userCredential.user.uid;
-      students = {};
-      subjects = [];
-      program = [];
-      set(ref(db, "diary/" + currentUid), {students, subjects, program})
-        .then(()=> { alert("Регистрация успешна!"); loginAfter(currentUid); });
-    })
-    .catch(err => alert(err.message));
-};
-
-window.loginUser = function(){
-  let email = document.getElementById('authEmail').value.trim();
-  let pass  = document.getElementById('authPass').value.trim();
-  if(!email || !pass) return alert("Попълни email и парола");
-
-  signInWithEmailAndPassword(auth, email, pass)
-    .then((userCredential) => { loginAfter(userCredential.user.uid); })
-    .catch(err => {
-      if(err.code === "auth/user-not-found"){
-        registerUser();
-      } else alert(err.message);
-    });
-};
-
-function loginAfter(uid){
-  currentUid = uid;
-  document.getElementById('authSection').classList.add('hidden');
-  showSection('students');
-  loadData();
-}
-
-window.logout = function(){
-  signOut(auth).then(()=> location.reload());
-};
-
-// ---------- LOAD / SAVE ----------
-function loadData(){
-  get(child(ref(db), "diary/"+currentUid)).then((snapshot)=>{
-    if(snapshot.exists()){
-      let val = snapshot.val();
-      students = val.students||{};
-      subjects = val.subjects||[];
-      program  = val.program||[];
-    } else {
-      students = {};
-      subjects = [];
-      program  = [];
-      set(ref(db, "diary/"+currentUid), {students, subjects, program});
-    }
-    updateSubjectSelect();
-    renderDiary();
-    renderProgram();
-    updateStudentList();
-  });
-}
-
-function saveData(){
-  if(!currentUid) return;
-  set(ref(db,"diary/"+currentUid), {students, subjects, program});
-}
-
-// ---------- STUDENTS ----------
-window.addStudent = function(){
-  let n = document.getElementById('newStudent').value.trim();
-  if(!n) return alert("Невалидно име");
-  if(!students[n]) students[n]={};
-  subjects.forEach(s=> students[n][s.name]={grades:[], remarks:[], praises:[]});
-  document.getElementById('newStudent').value="";
-  saveData();
-  renderDiary();
-  updateStudentList();
-};
-
-function updateStudentList(){
-  let studentList = document.getElementById('studentList');
-  studentList.innerHTML="";
-  for(let st in students){
-    let div = document.createElement("div");
-    div.textContent=st;
-    let btn = document.createElement("button");
-    btn.textContent="Премахни";
-    btn.onclick=()=>{delete students[st]; saveData(); renderDiary(); updateStudentList();}
-    div.appendChild(btn);
-    studentList.appendChild(div);
-  }
-}
-
-// ---------- SUBJECTS ----------
-window.addSubject = function(){
-  let n = document.getElementById('subjectName').value.trim();
-  let h = +document.getElementById('subjectHours').value;
-  if(!n || !h) return alert("Попълни предмет и часове");
-
-  let exists = subjects.find(s=>s.name===n);
-  if(exists) { exists.hours = h; }
-  else { subjects.push({name:n,hours:h}); }
-
-  for(let st in students){
-    if(!students[st][n]) students[st][n]={grades:[], remarks:[], praises:[]};
-  }
-  document.getElementById('subjectName').value="";
-  document.getElementById('subjectHours').value="";
-  saveData();
-  updateSubjectSelect();
-  renderDiary();
-};
-
-// ---------- SUBJECT SELECT ----------
-function updateSubjectSelect(){
-  let sel = document.getElementById('entrySubject');
-  sel.innerHTML = subjects.map(s=>`<option>${s.name}</option>`).join("");
-}
-
-// ---------- INPUT ----------
-document.getElementById('entryType').onchange=()=>{
-  document.getElementById('gradeBox').classList.toggle("hidden", document.getElementById('entryType').value!=="grade");
-  document.getElementById('textValue').classList.toggle("hidden", document.getElementById('entryType').value==="grade");
-};
-
-window.addEntry = function(){
-  let st = document.getElementById('entryStudent').value.trim();
-  let sub = document.getElementById('entrySubject').value;
-  if(!students[st]) return alert("Няма такъв ученик");
-  let box = students[st][sub];
-
-  if(document.getElementById('entryType').value==="grade"){
-    box.grades.push({
-      value:+document.getElementById('gradeValue').value,
-      author:document.getElementById('gradeAuthor').value,
-      reason:document.getElementById('gradeReason').value
-    });
-  } else if(document.getElementById('entryType').value==="remark"){
-    box.remarks.push(document.getElementById('textValue').value);
-  } else {
-    box.praises.push(document.getElementById('textValue').value);
-  }
-
-  document.getElementById('gradeValue').value="";
-  document.getElementById('gradeAuthor').value="";
-  document.getElementById('gradeReason').value="";
-  document.getElementById('textValue').value="";
-  saveData();
-  renderDiary();
-};
-
-// ---------- DIARY ----------
-function gradeColor(v){return {2:"#c0392b",3:"#e67e22",4:"#f1c40f",5:"#3498db",6:"#2ecc71"}[v]||"#777";}
-
+/* ---------- RENDER ---------- */
 function renderDiary(){
-  let diaryHead = document.getElementById('diaryHead');
-  let diaryBody = document.getElementById('diaryBody');
-  if(!subjects.length){ diaryHead.innerHTML=""; diaryBody.innerHTML=""; return; }
-
-  let h="<tr><th>Ученик</th>";
-  subjects.forEach(s=>h+=`<th>${s.name}</th>`);
-  h+="</tr>";
-  diaryHead.innerHTML = h;
-
-  let b="";
-  for(let st in students){
-    b+=`<tr><td>${st}</td>`;
-    subjects.forEach(s=>{
-      let d = students[st][s.name];
-      let gradesHTML = d.grades.map(g=>`<span class="grade" style="background:${gradeColor(g.value)}">${g.value}</span>`).join("");
-      let remarksHTML = d.remarks.join("<br>")||"-";
-      let praisesHTML = d.praises.join("<br>")||"-";
-      b+=`<td>Оц: ${gradesHTML}<br>З: ${remarksHTML}<br>П: ${praisesHTML}</td>`;
-    });
-    b+="</tr>";
-  }
-  diaryBody.innerHTML=b;
+ diaryHead.innerHTML="<tr><th>Ученик</th>"+subjects.map(s=>`<th>${s}</th>`).join("")+"</tr>";
+ diaryBody.innerHTML=Object.keys(students).map(st=>
+ `<tr><td>${st}</td>`+subjects.map(s=>`<td>${students[st][s]||''}</td>`).join("")+"</tr>`
+ ).join("");
 }
 
-// ---------- INIT ----------
-showSection('authSection');
+function renderProgram(){
+ programList.innerHTML=subjects.map(s=>`<li>${s}</li>`).join("");
+ entrySubject.innerHTML=subjects.map(s=>`<option>${s}</option>`).join("");
+}
 
+showSection('authSection');
 </script>
+
 </body>
 </html>
-
 
 
