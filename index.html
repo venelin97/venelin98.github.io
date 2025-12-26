@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Електронен дневник</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body{margin:0;font-family:Segoe UI;background:#f1f5f9}
 header{background:#1e293b;color:#fff;padding:15px;text-align:center;font-size:22px}
@@ -16,19 +17,23 @@ nav button:hover{background:#475569}
 input,select,textarea{width:100%;padding:10px;margin:6px 0;border-radius:6px;border:1px solid #cbd5e1}
 button.action{background:#2563eb;color:#fff;border:none;padding:10px;border-radius:6px;cursor:pointer}
 button.action:hover{opacity:.9}
-button.remove{background:#3b82f6;color:#fff;border:none;padding:4px 6px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:6px}
-button.remove:hover{opacity:.9}
-table{width:100%;border-collapse:collapse;table-layout:fixed;overflow-x:auto}
-th,td{border:1px solid #e5e7eb;padding:6px;text-align:center;word-wrap:break-word}
+table{width:100%;border-collapse:collapse;overflow-x:auto}
+th,td{border:1px solid #e5e7eb;padding:6px;text-align:center;min-width:50px}
 th{background:#e5e7eb}
 .grade{display:inline-block;padding:4px 7px;border-radius:5px;color:#fff;font-weight:bold;cursor:pointer;margin:2px}
 .avg{display:block;font-size:12px;color:#000;margin-top:4px}
+ul{padding-left:20px}
+ul li{margin-bottom:5px}
+.remove-btn{background:#3b82f6;color:#fff;border:none;padding:3px 6px;border-radius:4px;cursor:pointer;margin-left:5px;font-size:12px}
+.remove-btn:hover{opacity:.9}
+@media(max-width:600px){table{display:block;overflow-x:auto}}
 </style>
 </head>
+
 <body>
 <header>📘 Електронен училищен дневник</header>
 
-<nav id="menu" class="hidden">
+<nav class="hidden" id="menu">
 <button onclick="show('students')">Ученици</button>
 <button onclick="show('subjects')">Предмети & Програма</button>
 <button onclick="show('entry')">Въвеждане</button>
@@ -62,6 +67,7 @@ th{background:#e5e7eb}
 <input id="subjectHours" type="number" placeholder="Часове седмично">
 <button class="action" onclick="addSubject()">Добави предмет</button>
 <ul id="subjectList"></ul>
+
 <h3>Програма (3 дни × 6 часа)</h3>
 <button class="action" onclick="generateProgram()">Генерирай програма</button>
 <table id="programTable"></table>
@@ -73,9 +79,9 @@ th{background:#e5e7eb}
 <select id="eStudent"></select>
 <select id="eSubject"></select>
 <select id="eType">
-<option value="grade">Оценка</option>
-<option value="praise">Похвала</option>
-<option value="note">Забележка</option>
+  <option value="grade">Оценка</option>
+  <option value="praise">Похвала</option>
+  <option value="note">Забележка</option>
 </select>
 <input id="eValue" placeholder="Оценка (2-6)">
 <input id="eReason" placeholder="Причина (тест, ДЗ…)">
@@ -85,9 +91,7 @@ th{background:#e5e7eb}
 <!-- DIARY -->
 <div id="diary" class="card hidden">
 <h3>Дневник</h3>
-<div style="overflow-x:auto">
 <table id="diaryTable"></table>
-</div>
 </div>
 
 </div>
@@ -95,7 +99,7 @@ th{background:#e5e7eb}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
+import { getDatabase, ref, set, get, update, remove } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
 
 /* FIREBASE CONFIG */
 const firebaseConfig = {
@@ -112,31 +116,26 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-/* STATE */
 let uid=null;
-let data={students:{},subjects:{},program:[],diary:{}};
+let data={ students:{}, subjects:{}, program:[], diary:{} };
 
 /* AUTH STATE */
 onAuthStateChanged(auth,user=>{
-  if(user){
-    uid=user.uid;
-    load();
-    document.getElementById("menu").classList.remove("hidden");
-    show("students");
-  }else{
-    uid=null;
-    show("auth");
-  }
+  if(user){ uid=user.uid; load(); document.getElementById("menu").classList.remove("hidden"); show('students'); }
+  else{ uid=null; show('auth'); document.getElementById("menu").classList.add("hidden"); }
 });
 
 /* AUTH */
-window.register=()=>createUserWithEmailAndPassword(auth,email.value,password.value);
-window.login=()=>signInWithEmailAndPassword(auth,email.value,password.value);
+window.register=()=>{ createUserWithEmailAndPassword(auth,email.value,password.value)
+  .then(()=>alert("Регистрация успешна!")).catch(e=>alert(e.message)); }
+window.login=()=>{ signInWithEmailAndPassword(auth,email.value,password.value)
+  .catch(e=>alert(e.message)); }
 window.logout=()=>signOut(auth);
 
 /* DATA */
-function save(){ update(ref(db,"dnevnik/"+uid),data); }
+function save(){ if(!uid) return; update(ref(db,"dnevnik/"+uid),data); }
 function load(){
+  if(!uid) return;
   get(ref(db,"dnevnik/"+uid)).then(s=>{
     if(s.exists()) data=s.val();
     renderAll();
@@ -151,8 +150,9 @@ window.show=id=>{
 
 /* STUDENTS */
 window.addStudent=()=>{
-  if(!studentName.value) return;
-  data.students[studentName.value]={};
+  const name=studentName.value.trim();
+  if(!name||data.students[name]) return;
+  data.students[name]={};
   studentName.value="";
   save(); renderAll();
 };
@@ -164,25 +164,24 @@ window.removeStudent=name=>{
 
 /* SUBJECTS */
 window.addSubject=()=>{
-  const n=subjectName.value;
-  const h=+subjectHours.value;
-  if(!n||!h) return;
-  data.subjects[n]=h;
+  const name=subjectName.value.trim();
+  const hours=+subjectHours.value;
+  if(!name||!hours||data.subjects[name]) return;
+  data.subjects[name]=hours;
   subjectName.value=subjectHours.value="";
   save(); renderAll();
 };
 window.removeSubject=name=>{
   delete data.subjects[name];
-  Object.keys(data.diary).forEach(st=>delete data.diary[st][name]);
+  Object.keys(data.diary).forEach(s=>{ delete data.diary[s][name]; });
   save(); renderAll();
 };
 
 /* PROGRAM */
 window.generateProgram=()=>{
-  let total=Object.values(data.subjects).reduce((a,b)=>a+b,0);
-  if(total!==18) return alert("Часовете трябва да са точно 18");
-  let pool=[];
-  Object.entries(data.subjects).forEach(([s,h])=>{ for(let i=0;i<h;i++) pool.push(s); });
+  const total=Object.values(data.subjects).reduce((a,b)=>a+b,0);
+  if(total!==18) return alert("Сборът на часовете трябва да е 18!");
+  let pool=[]; Object.entries(data.subjects).forEach(([s,h])=>{ for(let i=0;i<h;i++) pool.push(s); });
   pool.sort(()=>Math.random()-0.5);
   data.program=[[],[],[]];
   for(let d=0;d<3;d++) for(let h=0;h<6;h++) data.program[d][h]=pool.pop();
@@ -191,25 +190,29 @@ window.generateProgram=()=>{
 
 /* ENTRY */
 window.addEntry=()=>{
-  const st=eStudent.value, sb=eSubject.value;
+  const st=eStudent.value, sb=eSubject.value, type=eType.value;
   if(!st||!sb) return;
-  data.diary[st]??={};
-  data.diary[st][sb]??={grades:[],praises:[],notes:[]};
-  if(eType.value==="grade") data.diary[st][sb].grades.push({value:+eValue.value,reason:eReason.value});
-  else if(eType.value==="praise") data.diary[st][sb].praises.push(eReason.value);
-  else data.diary[st][sb].notes.push(eReason.value);
+  data.diary[st]??={}; data.diary[st][sb]??={grades:[],praises:[],notes:[]};
+  if(type==="grade"){ data.diary[st][sb].grades.push({value:+eValue.value,reason:eReason.value}); }
+  else if(type==="praise"){ data.diary[st][sb].praises.push(eReason.value); }
+  else{ data.diary[st][sb].notes.push(eReason.value); }
   eValue.value=eReason.value="";
   save(); renderAll();
 };
 
 /* RENDER */
 function renderAll(){
-  studentList.innerHTML=Object.keys(data.students).map(s=>`<li>${s} <button class='remove' onclick='removeStudent("${s}")'>Премахни</button></li>`).join("");
-  subjectList.innerHTML=Object.entries(data.subjects).map(([s,h])=>`<li>${s} – ${h}ч <button class='remove' onclick='removeSubject("${s}")'>Премахни</button></li>`).join("");
+  // students
+  studentList.innerHTML=Object.keys(data.students)
+    .map(s=>`<li>${s} <button class="remove-btn" onclick="removeStudent('${s}')">Премахни</button></li>`).join("");
+  // subjects
+  subjectList.innerHTML=Object.entries(data.subjects)
+    .map(([s,h])=>`<li>${s} – ${h}ч <button class="remove-btn" onclick="removeSubject('${s}')">Премахни</button></li>`).join("");
+  // selects
   eStudent.innerHTML=Object.keys(data.students).map(s=>`<option>${s}</option>`).join("");
   eSubject.innerHTML=Object.keys(data.subjects).map(s=>`<option>${s}</option>`).join("");
-  renderProgram();
-  renderDiary();
+  // diary & program
+  renderProgram(); renderDiary();
 }
 
 function renderProgram(){
@@ -223,23 +226,35 @@ function renderProgram(){
 }
 
 function renderDiary(){
-  let t=document.getElementById("diaryTable");
-  let subs=Object.keys(data.subjects);
-  if(!subs.length||!Object.keys(data.students).length) return t.innerHTML="";
-  let h="<tr><th>Ученик</th>"+subs.map(s=>`<th colspan='3'>${s}</th>`).join("")+"</tr>";
-  h+="<tr><th></th>"+subs.map(()=>"<th>Оценки</th><th>Похвали</th><th>Забележки</th>").join("")+"</tr>";
+  const t=diaryTable;
+  const subs=Object.keys(data.subjects);
+  if(!subs.length) return t.innerHTML="";
+  let h="<tr><th>Ученик</th>";
+  subs.forEach(s=>{h+=`<th colspan='3'>${s}</th>`});
+  h+="</tr><tr><th></th>";
+  subs.forEach(()=>h+="<th>Оценки</th><th>Похвали</th><th>Забележки</th>"); h+="</tr>";
   let b="";
   Object.keys(data.students).forEach(st=>{
     b+=`<tr><td>${st}</td>`;
     subs.forEach(sb=>{
-      let d=data.diary[st]?.[sb]||{grades:[],praises:[],notes:[]};
-      let avg=d.grades.length?(d.grades.reduce((a,g)=>a+g.value,0)/d.grades.length).toFixed(2):"–";
-      b+=`<td>${d.grades.map(g=>`<span class='grade' title='${g.reason}'>${g.value}</span>`).join("")}<div class='avg'>${avg}</div></td><td>${d.praises.join("<br>")}</td><td>${d.notes.join("<br>")}</td>`;
+      const d=data.diary[st]?.[sb]||{grades:[],praises:[],notes:[]};
+      const avg=d.grades.length ? (d.grades.reduce((a,g)=>a+g.value,0)/d.grades.length).toFixed(2) :"–";
+      b+=`<td>${d.grades.map((g,i)=>`<span class="grade" title="${g.reason}" onclick="deleteGrade('${st}','${sb}',${i})">${g.value}</span>`).join("")}<div class="avg">Среден: ${avg}</div></td>`;
+      b+=`<td>${d.praises.join("<br>")}</td>`;
+      b+=`<td>${d.notes.join("<br>")}</td>`;
     });
     b+="</tr>";
   });
   t.innerHTML=h+b;
 }
+
+/* DELETE GRADE */
+window.deleteGrade=(st,sb,i)=>{
+  if(confirm("Искате ли да изтриете оценката?")){
+    data.diary[st][sb].grades.splice(i,1);
+    save(); renderAll();
+  }
+};
 </script>
 </body>
 </html>
