@@ -423,14 +423,6 @@
                 showMessage('authMessage', 'Грешка: ' + error.message, 'error');
             }
         });
-        function gradeColor(value){
-    if(value >= 5.5) return 'linear-gradient(135deg,#2ecc71,#27ae60)'; // 6
-    if(value >= 4.5) return 'linear-gradient(135deg,#3498db,#2980b9)'; // 5
-    if(value >= 3.5) return 'linear-gradient(135deg,#f1c40f,#f39c12)'; // 4
-    if(value >= 2.5) return 'linear-gradient(135deg,#e67e22,#d35400)'; // 3
-    return 'linear-gradient(135deg,#8e0e00,#c0392b)';                // 2
-}
-
 
         document.getElementById('loginBtn').addEventListener('click', async () => {
             const email = document.getElementById('authEmail').value;
@@ -484,8 +476,8 @@
                 document.getElementById(section + 'Card').classList.add('active');
                 
                 if (section === 'diary') {
-                    renderDiary()
-               
+                    renderDiary();
+                }
             });
         });
 
@@ -726,21 +718,8 @@
                     // Оценки
                     html += '<td>';
                     gradesList.forEach(([gradeId, grade]) => {
-                       html += `
-<div class="grade-item"
-    style="
-        background:${gradeColor(grade.value)};
-        color:white;
-        font-weight:bold;
-        border-radius:8px;
-        padding:6px 10px;
-        box-shadow:0 4px 10px rgba(0,0,0,.25);
-    "
-    onclick="deleteGrade('${studentId}','${gradeId}')">
-    ${grade.value.toFixed(2)}
-</div>
-`;}
-
+                        html += `<div class="grade-item" onclick="deleteGrade('${studentId}', '${gradeId}')" title="${grade.reason}">${grade.value.toFixed(2)}</div>`;
+                    });
                     if (gradesList.length > 0) {
                         const avg = gradesList.reduce((sum, [_, g]) => sum + g.value, 0) / gradesList.length;
                         html += `<div class="average">Ср: ${avg.toFixed(2)}</div>`;
@@ -769,34 +748,9 @@
             container.innerHTML = html;
         }
 
-       window.deleteGrade = (studentId, gradeId) => {
-    const popup = document.getElementById('gradePopup');
-    const content = document.getElementById('popupContent');
-
-    const grade = grades[studentId][gradeId];
-
-    content.innerHTML = `
-        <h3 style="margin-bottom:10px;">Подробности</h3>
-        ${grade.value ? `<p><b>Оценка:</b> ${grade.value}</p>` : ''}
-        <p><b>Описание:</b> ${grade.reason || '—'}</p>
-
-        <div style="margin-top:15px;display:flex;gap:10px;">
-            <button class="btn btn-danger" onclick="confirmDelete('${studentId}','${gradeId}')">Изтрий</button>
-            <button class="btn" onclick="closePopup()">Затвори</button>
-        </div>
-    `;
-    popup.style.display = 'flex';
-};
-
-window.confirmDelete = async (studentId, gradeId) => {
-    await remove(ref(db, `users/${currentUser.uid}/grades/${studentId}/${gradeId}`));
-    closePopup();
-};
-
-window.closePopup = () => {
-    document.getElementById('gradePopup').style.display = 'none';
-};
-
+        window.deleteGrade = async (studentId, gradeId) => {
+            if (!currentUser || !confirm('Сигурни ли сте, че искате да изтриете тази оценка?')) return;
+            await remove(ref(db, `users/${currentUser.uid}/grades/${studentId}/${gradeId}`));
         };
 
         // Load data
@@ -834,23 +788,5 @@ window.closePopup = () => {
             }, 3000);
         }
     </script>
-    <div id="gradePopup" style="
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.6);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:9999;">
-    <div style="
-        background:white;
-        padding:25px;
-        border-radius:14px;
-        min-width:300px;
-        box-shadow:0 20px 40px rgba(0,0,0,.4);">
-        <div id="popupContent"></div>
-    </div>
-</div>
-
 </body>
 </html>
