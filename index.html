@@ -2,222 +2,257 @@
 <html lang="bg">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Електронен Дневник</title>
+<title>Електронен дневник</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
 body{
-    font-family:'Segoe UI',Tahoma;
+    margin:0;
+    font-family:Segoe UI,Arial;
     background:linear-gradient(135deg,#667eea,#764ba2);
-    min-height:100vh;
-    padding:20px;
 }
-.container{max-width:1400px;margin:auto}
-.header{
-    background:#fff;
+.container{max-width:1400px;margin:auto;padding:20px}
+header{
+    background:white;
     padding:20px;
-    border-radius:10px;
-    margin-bottom:20px;
-    box-shadow:0 4px 6px rgba(0,0,0,.1);
+    border-radius:14px;
     display:flex;
     justify-content:space-between;
-    align-items:center
+    align-items:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.15)
 }
-.header h1{color:#667eea}
-.menu{background:#fff;padding:15px;border-radius:10px;margin-bottom:20px;display:none;gap:10px}
-.menu.active{display:flex}
-.menu-btn{
-    padding:10px 20px;
-    border:none;
-    border-radius:6px;
+header h1{color:#667eea;margin:0}
+
+.menu{margin:20px 0;display:none;gap:10px;flex-wrap:wrap}
+.menu button{
     background:#667eea;
-    color:#fff;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    border-radius:8px;
     cursor:pointer
 }
-.menu-btn.active{background:#764ba2}
+.menu button.active{background:#764ba2}
+
 .card{
-    background:#fff;
-    padding:30px;
-    border-radius:10px;
-    box-shadow:0 4px 6px rgba(0,0,0,.1);
+    background:white;
+    padding:25px;
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
     display:none
 }
 .card.active{display:block}
 
-.diary-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:20px;
-    display:block;
-    overflow-x:auto
-}
-.diary-table th,.diary-table td{
-    border:1px solid #ddd;
+input,select,button{
     padding:10px;
-    text-align:center;
-    min-width:90px
-}
-.diary-table th{background:#667eea;color:#fff;position:sticky;top:0}
-
-/* === ОЦЕНКИ === */
-.grade-item{
-    color:#fff;
-    font-weight:bold;
-    min-width:36px;
-    padding:6px;
-    margin:4px;
     border-radius:8px;
-    cursor:pointer;
-    display:inline-block;
-    transition:.2s;
+    border:1px solid #ccc;
+    margin:6px 0;
+    width:100%
 }
-.grade-item:hover{transform:scale(1.1)}
+button{cursor:pointer}
 
-/* === POPUP === */
-.grade-popup{
-    position:fixed;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    background:#fff;
-    padding:20px;
-    border-radius:14px;
-    box-shadow:0 20px 50px rgba(0,0,0,.3);
-    z-index:9999;
-    min-width:320px
-}
-.grade-popup h3{margin-bottom:10px}
-.popup-close{
-    position:absolute;
-    top:10px;
-    right:14px;
+.grade-box{
+    width:36px;
+    height:36px;
+    border-radius:8px;
+    color:white;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    margin:3px;
     cursor:pointer;
-    font-size:22px;
-    color:red
+    box-shadow:0 4px 10px rgba(0,0,0,.25)
 }
-.btn-danger{
-    background:#e74c3c;
-    color:#fff;
-    border:none;
-    padding:8px 14px;
-    border-radius:6px;
+
+/* POPUP */
+.popup-bg{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:9999
+}
+.popup{
+    background:white;
+    border-radius:18px;
+    padding:25px;
+    min-width:320px;
+    position:relative;
+    box-shadow:0 30px 60px rgba(0,0,0,.4);
+    color:black
+}
+.popup .close{
+    position:absolute;
+    top:12px;
+    right:16px;
+    font-size:22px;
+    color:red;
     cursor:pointer
 }
-</style>
-</head>
-
-<body>
-<div class="container">
-
-<div class="header">
-    <h1>📚 Електронен Дневник</h1>
-    <button id="logoutBtn" style="display:none" class="btn-danger">Изход</button>
-</div>
-
-<div class="menu" id="mainMenu">
-    <button class="menu-btn active" data-section="students">Ученици</button>
-    <button class="menu-btn" data-section="subjects">Предмети</button>
-    <button class="menu-btn" data-section="grades">Въвеждане</button>
-    <button class="menu-btn" data-section="diary">Дневник</button>
-</div>
-
-<div class="card active" id="authCard">
-    <input id="authEmail" placeholder="Имейл"><br><br>
-    <input id="authPassword" type="password" placeholder="Парола"><br><br>
-    <button id="registerBtn">Регистрация</button>
-    <button id="loginBtn">Вход</button>
-</div>
-
-<div class="card" id="diaryCard">
-    <h2>Дневник</h2>
-    <div id="diaryContainer"></div>
-</div>
-
-</div>
-
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getDatabase, ref, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-
-const app = initializeApp({
-    apiKey:"AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
-    authDomain:"dnevnik2-42909.firebaseapp.com",
-    databaseURL:"https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId:"dnevnik2-42909"
-});
-const auth=getAuth(app);
-const db=getDatabase(app);
-
-let students={},subjects={},grades={},user=null;
-
-function gradeColor(v){
-    if(v>=5.75)return'linear-gradient(135deg,#2ecc71,#27ae60)';
-    if(v>=4.75)return'linear-gradient(135deg,#3498db,#2980b9)';
-    if(v>=3.75)return'linear-gradient(135deg,#f1c40f,#f39c12)';
-    if(v>=2.75)return'linear-gradient(135deg,#e67e22,#d35400)';
-    return'linear-gradient(135deg,#8e0e00,#1f1c18)';
+.popup button{
+    background:#e74c3c;
+    color:white;
+    border:none;
+    padding:10px 16px;
+    margin-top:15px;
+    border-radius:8px
 }
 
-window.showPopup=(title,text,cb)=>{
-    const p=document.createElement('div');
-    p.className='grade-popup';
-    p.innerHTML=`
-        <span class="popup-close">&times;</span>
-        <h3>${title}</h3>
-        <p>${text}</p>
-        <button class="btn-danger">Изтрий</button>
-    `;
-    p.querySelector('.popup-close').onclick=()=>p.remove();
-    p.querySelector('button').onclick=()=>{cb();p.remove()};
-    document.body.appendChild(p);
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px
+}
+th,td{
+    border:1px solid #ddd;
+    padding:8px;
+    text-align:center
+}
+th{background:#667eea;color:white}
+
+.avg{margin-top:5px;font-weight:bold;color:#667eea}
+</style>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, set, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+/* 🔥 FIREBASE */
+const firebaseConfig = {
+  apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
+  authDomain: "dnevnik2-42909.firebaseapp.com",
+  databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "dnevnik2-42909",
+  storageBucket: "dnevnik2-42909.appspot.com",
+  messagingSenderId: "824393263608",
+  appId: "1:824393263608:web:eb35cff1cab09a16eace0d"
 };
 
-window.deleteGrade=(sid,gid)=>{
-    remove(ref(db,`users/${user.uid}/grades/${sid}/${gid}`));
-};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-function renderDiary(){
-    let html='<table class="diary-table"><tr><th>Ученик</th>';
+let user=null, students={}, subjects={}, entries={};
+
+/* 🔑 AUTH */
+window.register=()=>createUserWithEmailAndPassword(auth,email.value,password.value)
+window.login=()=>signInWithEmailAndPassword(auth,email.value,password.value)
+window.logout=()=>signOut(auth)
+
+onAuthStateChanged(auth,u=>{
+    if(u){
+        user=u;
+        menu.style.display='flex';
+        authCard.classList.remove('active');
+        studentsCard.classList.add('active');
+        loadAll();
+    }else{
+        user=null;
+        menu.style.display='none';
+        authCard.classList.add('active');
+    }
+});
+
+/* 📥 DATA */
+function loadAll(){
+    onValue(ref(db,`users/${user.uid}/students`),s=>{students=s.val()||{};renderStudents();renderJournal()});
+    onValue(ref(db,`users/${user.uid}/subjects`),s=>{subjects=s.val()||{};renderJournal()});
+    onValue(ref(db,`users/${user.uid}/entries`),s=>{entries=s.val()||{};renderJournal()});
+}
+
+/* 🎨 GRADE COLOR */
+function gradeColor(v){
+    if(v>=6) return 'linear-gradient(135deg,#2ecc71,#27ae60)';
+    if(v>=5) return 'linear-gradient(135deg,#3498db,#2980b9)';
+    if(v>=4) return 'linear-gradient(135deg,#f1c40f,#f39c12)';
+    if(v>=3) return 'linear-gradient(135deg,#e67e22,#d35400)';
+    return 'linear-gradient(135deg,#8e0e00,#c0392b)';
+}
+
+/* 📘 JOURNAL */
+function renderJournal(){
+    journal.innerHTML='';
+    let html='<table><tr><th>Ученик</th>';
     Object.values(subjects).forEach(s=>html+=`<th>${s.name}</th>`);
     html+='</tr>';
 
     Object.entries(students).forEach(([sid,s])=>{
-        html+=`<tr><td><b>${s.name}</b></td>`;
+        html+=`<tr><td>${s.name}</td>`;
         Object.keys(subjects).forEach(sub=>{
             html+='<td>';
-            Object.entries(grades[sid]||{}).forEach(([gid,g])=>{
-                if(g.subjectId===sub){
-                    if(g.type==='grade'){
-                        html+=`
-                        <div class="grade-item" style="background:${gradeColor(g.value)}"
-                        onclick="showPopup('Оценка ${g.value}', '${g.reason}', ()=>deleteGrade('${sid}','${gid}'))">
-                        ${g.value.toFixed(2)}</div>`;
-                    }
-                }
+            Object.entries(entries[sid]?.[sub]||{}).forEach(([eid,e])=>{
+                const text=e.type==='grade'?e.value:(e.type==='praise'?'П':'З');
+                const bg=e.type==='grade'?gradeColor(e.value):(e.type==='praise'?'#3498db':'#e67e22');
+                html+=`<div class="grade-box" style="background:${bg}"
+                onclick="openPopup('${sid}','${sub}','${eid}')">${text}</div>`;
             });
             html+='</td>';
         });
         html+='</tr>';
     });
-    html+='</table>';
-    diaryContainer.innerHTML=html;
+
+    journal.innerHTML=html+'</table>';
 }
 
-onAuthStateChanged(auth,u=>{
-    user=u;
-    if(u){
-        document.getElementById('logoutBtn').style.display='block';
-        document.getElementById('authCard').style.display='none';
-        document.getElementById('mainMenu').classList.add('active');
+/* 📌 POPUP */
+window.openPopup=(sid,sub,eid)=>{
+    const e=entries[sid][sub][eid];
+    const bg=document.createElement('div');
+    bg.className='popup-bg';
+    bg.innerHTML=`
+    <div class="popup">
+        <span class="close">✖</span>
+        <h3>${e.type==='grade'?'Оценка':'Отзив'}</h3>
+        ${e.value?`<p><b>Стойност:</b> ${e.value}</p>`:''}
+        <p><b>Причина:</b> ${e.reason}</p>
+        <p><b>От:</b> ${e.teacher}</p>
+        <button>Изтрий</button>
+    </div>`;
+    bg.querySelector('.close').onclick=()=>bg.remove();
+    bg.querySelector('button').onclick=()=>{
+        remove(ref(db,`users/${user.uid}/entries/${sid}/${sub}/${eid}`));
+        bg.remove();
+    };
+    document.body.appendChild(bg);
+}
+</script>
+</head>
 
-        onValue(ref(db,`users/${u.uid}/students`),s=>{students=s.val()||{};renderDiary()});
-        onValue(ref(db,`users/${u.uid}/subjects`),s=>{subjects=s.val()||{};renderDiary()});
-        onValue(ref(db,`users/${u.uid}/grades`),s=>{grades=s.val()||{};renderDiary()});
-    }
-});
+<body>
+<div class="container">
+
+<header>
+<h1>📚 Електронен дневник</h1>
+<button onclick="logout()">Изход</button>
+</header>
+
+<div class="menu" id="menu">
+<button onclick="show('studentsCard')">Ученици</button>
+<button onclick="show('journalCard')">Дневник</button>
+</div>
+
+<div class="card active" id="authCard">
+<input id="email" placeholder="email">
+<input id="password" type="password" placeholder="password">
+<button onclick="register()">Регистрация</button>
+<button onclick="login()">Вход</button>
+</div>
+
+<div class="card" id="studentsCard"></div>
+<div class="card" id="journalCard"><div id="journal"></div></div>
+
+</div>
+
+<script>
+function show(id){
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
 </script>
 </body>
 </html>
-
