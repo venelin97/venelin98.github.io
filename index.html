@@ -1,792 +1,223 @@
 <!DOCTYPE html>
 <html lang="bg">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Електронен Дневник</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Електронен Дневник</title>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+    font-family:'Segoe UI',Tahoma;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    min-height:100vh;
+    padding:20px;
+}
+.container{max-width:1400px;margin:auto}
+.header{
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:20px;
+    box-shadow:0 4px 6px rgba(0,0,0,.1);
+    display:flex;
+    justify-content:space-between;
+    align-items:center
+}
+.header h1{color:#667eea}
+.menu{background:#fff;padding:15px;border-radius:10px;margin-bottom:20px;display:none;gap:10px}
+.menu.active{display:flex}
+.menu-btn{
+    padding:10px 20px;
+    border:none;
+    border-radius:6px;
+    background:#667eea;
+    color:#fff;
+    cursor:pointer
+}
+.menu-btn.active{background:#764ba2}
+.card{
+    background:#fff;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 4px 6px rgba(0,0,0,.1);
+    display:none
+}
+.card.active{display:block}
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+.diary-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+    display:block;
+    overflow-x:auto
+}
+.diary-table th,.diary-table td{
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:center;
+    min-width:90px
+}
+.diary-table th{background:#667eea;color:#fff;position:sticky;top:0}
 
-        .header {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+/* === ОЦЕНКИ === */
+.grade-item{
+    color:#fff;
+    font-weight:bold;
+    min-width:36px;
+    padding:6px;
+    margin:4px;
+    border-radius:8px;
+    cursor:pointer;
+    display:inline-block;
+    transition:.2s;
+}
+.grade-item:hover{transform:scale(1.1)}
 
-        .header h1 {
-            color: #667eea;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .menu {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: none;
-        }
-
-        .menu.active {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .menu-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background: #667eea;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .menu-btn:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-        }
-
-        .menu-btn.active {
-            background: #764ba2;
-        }
-
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: none;
-        }
-
-        .card.active {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background: #667eea;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .btn:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-        }
-
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-danger {
-            background: #e74c3c;
-        }
-
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-
-        .btn-small {
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-
-        .list {
-            margin-top: 20px;
-        }
-
-        .list-item {
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .schedule-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .schedule-table th, .schedule-table td {
-            border: 2px solid #667eea;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .schedule-table th {
-            background: #667eea;
-            color: white;
-        }
-
-        .schedule-table td {
-            background: #f8f9fa;
-        }
-
-        .diary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            overflow-x: auto;
-            display: block;
-        }
-
-        .diary-table th, .diary-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-            min-width: 80px;
-        }
-
-        .diary-table th {
-            background: #667eea;
-            color: white;
-            position: sticky;
-            top: 0;
-        }
-
-        .diary-table td {
-            background: white;
-        }
-
-        .grade-item {
-            background: #e8f4f8;
-            padding: 5px;
-            margin: 3px;
-            border-radius: 3px;
-            cursor: pointer;
-            display: inline-block;
-        }
-
-        .grade-item:hover {
-            background: #ffcccc;
-        }
-
-        .average {
-            font-weight: bold;
-            color: #667eea;
-            margin-top: 5px;
-        }
-
-        .info-message {
-            padding: 15px;
-            background: #fff3cd;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            color: #856404;
-        }
-
-        .success-message {
-            padding: 15px;
-            background: #d4edda;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            color: #155724;
-        }
-
-        .error-message {
-            padding: 15px;
-            background: #f8d7da;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            color: #721c24;
-        }
-
-        .two-column {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .two-column {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+/* === POPUP === */
+.grade-popup{
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:#fff;
+    padding:20px;
+    border-radius:14px;
+    box-shadow:0 20px 50px rgba(0,0,0,.3);
+    z-index:9999;
+    min-width:320px
+}
+.grade-popup h3{margin-bottom:10px}
+.popup-close{
+    position:absolute;
+    top:10px;
+    right:14px;
+    cursor:pointer;
+    font-size:22px;
+    color:red
+}
+.btn-danger{
+    background:#e74c3c;
+    color:#fff;
+    border:none;
+    padding:8px 14px;
+    border-radius:6px;
+    cursor:pointer
+}
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📚 Електронен Дневник</h1>
-            <div class="user-info">
-                <span id="userEmail"></span>
-                <button class="btn btn-small btn-danger" id="logoutBtn" style="display:none;">Изход</button>
-            </div>
-        </div>
+<div class="container">
 
-        <div class="menu" id="mainMenu">
-            <button class="menu-btn active" data-section="students">Ученици</button>
-            <button class="menu-btn" data-section="subjects">Предмети и Програма</button>
-            <button class="menu-btn" data-section="grades">Въвеждане</button>
-            <button class="menu-btn" data-section="diary">Дневник</button>
-        </div>
+<div class="header">
+    <h1>📚 Електронен Дневник</h1>
+    <button id="logoutBtn" style="display:none" class="btn-danger">Изход</button>
+</div>
 
-        <!-- AUTH CARD -->
-        <div class="card active" id="authCard">
-            <h2>Вход / Регистрация</h2>
-            <div class="form-group">
-                <label>Имейл:</label>
-                <input type="email" id="authEmail" placeholder="teacher@school.bg">
-            </div>
-            <div class="form-group">
-                <label>Парола:</label>
-                <input type="password" id="authPassword" placeholder="********">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn" id="registerBtn">Регистрация</button>
-                <button class="btn" id="loginBtn">Вход</button>
-            </div>
-            <div id="authMessage" style="margin-top: 15px;"></div>
-        </div>
+<div class="menu" id="mainMenu">
+    <button class="menu-btn active" data-section="students">Ученици</button>
+    <button class="menu-btn" data-section="subjects">Предмети</button>
+    <button class="menu-btn" data-section="grades">Въвеждане</button>
+    <button class="menu-btn" data-section="diary">Дневник</button>
+</div>
 
-        <!-- STUDENTS CARD -->
-        <div class="card" id="studentsCard">
-            <h2>Управление на ученици</h2>
-            <div class="form-group">
-                <label>Име на ученик:</label>
-                <input type="text" id="studentName" placeholder="Иван Иванов">
-            </div>
-            <button class="btn" id="addStudentBtn">Добави ученик</button>
-            <div class="list" id="studentsList"></div>
-        </div>
+<div class="card active" id="authCard">
+    <input id="authEmail" placeholder="Имейл"><br><br>
+    <input id="authPassword" type="password" placeholder="Парола"><br><br>
+    <button id="registerBtn">Регистрация</button>
+    <button id="loginBtn">Вход</button>
+</div>
 
-        <!-- SUBJECTS CARD -->
-        <div class="card" id="subjectsCard">
-            <h2>Предмети и Програма</h2>
-            <div class="two-column">
-                <div>
-                    <div class="form-group">
-                        <label>Име на предмет:</label>
-                        <input type="text" id="subjectName" placeholder="Математика">
-                    </div>
-                    <div class="form-group">
-                        <label>Часове на седмица:</label>
-                        <input type="number" id="subjectHours" min="1" max="18" placeholder="3">
-                    </div>
-                    <button class="btn" id="addSubjectBtn">Добави предмет</button>
-                    <div class="list" id="subjectsList"></div>
-                </div>
-                <div>
-                    <div id="scheduleInfo"></div>
-                    <button class="btn" id="generateScheduleBtn" disabled>Генерирай програма</button>
-                    <div id="scheduleContainer"></div>
-                </div>
-            </div>
-        </div>
+<div class="card" id="diaryCard">
+    <h2>Дневник</h2>
+    <div id="diaryContainer"></div>
+</div>
 
-        <!-- GRADES CARD -->
-        <div class="card" id="gradesCard">
-            <h2>Въвеждане на оценки / похвали / забележки</h2>
-            <div class="form-group">
-                <label>Ученик:</label>
-                <select id="gradeStudent">
-                    <option value="">Избери ученик...</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Предмет:</label>
-                <select id="gradeSubject">
-                    <option value="">Избери предмет...</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Тип:</label>
-                <select id="gradeType">
-                    <option value="grade">Оценка</option>
-                    <option value="praise">Похвала</option>
-                    <option value="remark">Забележка</option>
-                </select>
-            </div>
-            <div class="form-group" id="gradeValueGroup">
-                <label>Оценка (2-6):</label>
-                <input type="number" id="gradeValue" min="2" max="6" step="0.01" placeholder="6.00">
-            </div>
-            <div class="form-group">
-                <label>Причина/Описание:</label>
-                <input type="text" id="gradeReason" placeholder="Контролно по алгебра">
-            </div>
-            <button class="btn" id="saveGradeBtn">Запази</button>
-            <div id="gradeMessage" style="margin-top: 15px;"></div>
-        </div>
+</div>
 
-        <!-- DIARY CARD -->
-        <div class="card" id="diaryCard">
-            <h2>Дневник</h2>
-            <div id="diaryContainer"></div>
-        </div>
-    </div>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getDatabase, ref, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getDatabase, ref, set, push, remove, onValue, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+const app = initializeApp({
+    apiKey:"AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
+    authDomain:"dnevnik2-42909.firebaseapp.com",
+    databaseURL:"https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"dnevnik2-42909"
+});
+const auth=getAuth(app);
+const db=getDatabase(app);
 
-        // Firebase конфигурация - ЗАМЕНИ С ТВОИТЕ ДАННИ
-       // Firebase конфигурация
-        const firebaseConfig = {
-            apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
-            authDomain: "dnevnik2-42909.firebaseapp.com",
-            databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "dnevnik2-42909",
-            storageBucket: "dnevnik2-42909.appspot.com",
-            messagingSenderId: "824393263608",
-            appId: "1:824393263608:web:eb35cff1cab09a16eace0d"
-        };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
+let students={},subjects={},grades={},user=null;
 
-        let currentUser = null;
-        let students = {};
-        let subjects = {};
-        let schedule = {};
-        let grades = {};
+function gradeColor(v){
+    if(v>=5.75)return'linear-gradient(135deg,#2ecc71,#27ae60)';
+    if(v>=4.75)return'linear-gradient(135deg,#3498db,#2980b9)';
+    if(v>=3.75)return'linear-gradient(135deg,#f1c40f,#f39c12)';
+    if(v>=2.75)return'linear-gradient(135deg,#e67e22,#d35400)';
+    return'linear-gradient(135deg,#8e0e00,#1f1c18)';
+}
 
-        // DOM елементи
-        const authCard = document.getElementById('authCard');
-        const studentsCard = document.getElementById('studentsCard');
-        const subjectsCard = document.getElementById('subjectsCard');
-        const gradesCard = document.getElementById('gradesCard');
-        const diaryCard = document.getElementById('diaryCard');
-        const mainMenu = document.getElementById('mainMenu');
+window.showPopup=(title,text,cb)=>{
+    const p=document.createElement('div');
+    p.className='grade-popup';
+    p.innerHTML=`
+        <span class="popup-close">&times;</span>
+        <h3>${title}</h3>
+        <p>${text}</p>
+        <button class="btn-danger">Изтрий</button>
+    `;
+    p.querySelector('.popup-close').onclick=()=>p.remove();
+    p.querySelector('button').onclick=()=>{cb();p.remove()};
+    document.body.appendChild(p);
+};
 
-        // Auth
-        document.getElementById('registerBtn').addEventListener('click', async () => {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            try {
-                await createUserWithEmailAndPassword(auth, email, password);
-                showMessage('authMessage', 'Успешна регистрация!', 'success');
-            } catch (error) {
-                showMessage('authMessage', 'Грешка: ' + error.message, 'error');
-            }
-        });
+window.deleteGrade=(sid,gid)=>{
+    remove(ref(db,`users/${user.uid}/grades/${sid}/${gid}`));
+};
 
-        document.getElementById('loginBtn').addEventListener('click', async () => {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                showMessage('authMessage', 'Успешен вход!', 'success');
-            } catch (error) {
-                showMessage('authMessage', 'Грешка: ' + error.message, 'error');
-            }
-        });
+function renderDiary(){
+    let html='<table class="diary-table"><tr><th>Ученик</th>';
+    Object.values(subjects).forEach(s=>html+=`<th>${s.name}</th>`);
+    html+='</tr>';
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            signOut(auth);
-        });
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('userEmail').textContent = user.email;
-                document.getElementById('logoutBtn').style.display = 'block';
-                authCard.classList.remove('active');
-                mainMenu.classList.add('active');
-                studentsCard.classList.add('active');
-                loadData();
-            } else {
-                currentUser = null;
-                document.getElementById('userEmail').textContent = '';
-                document.getElementById('logoutBtn').style.display = 'none';
-                authCard.classList.add('active');
-                mainMenu.classList.remove('active');
-                studentsCard.classList.remove('active');
-                subjectsCard.classList.remove('active');
-                gradesCard.classList.remove('active');
-                diaryCard.classList.remove('active');
-            }
-        });
-
-        // Menu navigation
-        document.querySelectorAll('.menu-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                const section = btn.dataset.section;
-                studentsCard.classList.remove('active');
-                subjectsCard.classList.remove('active');
-                gradesCard.classList.remove('active');
-                diaryCard.classList.remove('active');
-                
-                document.getElementById(section + 'Card').classList.add('active');
-                
-                if (section === 'diary') {
-                    renderDiary();
-                }
-            });
-        });
-
-        // Students
-        document.getElementById('addStudentBtn').addEventListener('click', async () => {
-            const name = document.getElementById('studentName').value.trim();
-            if (!name || !currentUser) return;
-            
-            const studentRef = push(ref(db, `users/${currentUser.uid}/students`));
-            await set(studentRef, { name });
-            document.getElementById('studentName').value = '';
-        });
-
-        function renderStudents() {
-            const list = document.getElementById('studentsList');
-            list.innerHTML = '';
-            
-            Object.entries(students).forEach(([id, student]) => {
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                item.innerHTML = `
-                    <span>${student.name}</span>
-                    <button class="btn btn-small btn-danger" onclick="removeStudent('${id}')">Премахни</button>
-                `;
-                list.appendChild(item);
-            });
-            
-            updateGradeSelects();
-        }
-
-        window.removeStudent = async (id) => {
-            if (!currentUser) return;
-            await remove(ref(db, `users/${currentUser.uid}/students/${id}`));
-            await remove(ref(db, `users/${currentUser.uid}/grades/${id}`));
-        };
-
-        // Subjects
-        document.getElementById('addSubjectBtn').addEventListener('click', async () => {
-            const name = document.getElementById('subjectName').value.trim();
-            const hours = parseInt(document.getElementById('subjectHours').value);
-            
-            if (!name || !hours || !currentUser) return;
-            
-            const subjectRef = push(ref(db, `users/${currentUser.uid}/subjects`));
-            await set(subjectRef, { name, hours });
-            
-            document.getElementById('subjectName').value = '';
-            document.getElementById('subjectHours').value = '';
-        });
-
-        function renderSubjects() {
-            const list = document.getElementById('subjectsList');
-            list.innerHTML = '';
-            
-            let totalHours = 0;
-            Object.entries(subjects).forEach(([id, subject]) => {
-                totalHours += subject.hours;
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                item.innerHTML = `
-                    <span>${subject.name} (${subject.hours}ч.)</span>
-                    <button class="btn btn-small btn-danger" onclick="removeSubject('${id}')">Премахни</button>
-                `;
-                list.appendChild(item);
-            });
-            
-            const info = document.getElementById('scheduleInfo');
-            if (totalHours === 18) {
-                info.innerHTML = '<div class="success-message">✓ Общо часове: 18. Можете да генерирате програма!</div>';
-                document.getElementById('generateScheduleBtn').disabled = false;
-            } else {
-                info.innerHTML = `<div class="info-message">Общо часове: ${totalHours}/18. Нужни са точно 18 часа.</div>`;
-                document.getElementById('generateScheduleBtn').disabled = true;
-            }
-            
-            updateGradeSelects();
-        }
-
-        window.removeSubject = async (id) => {
-            if (!currentUser) return;
-            await remove(ref(db, `users/${currentUser.uid}/subjects/${id}`));
-        };
-
-        document.getElementById('generateScheduleBtn').addEventListener('click', async () => {
-            if (!currentUser) return;
-            
-            const newSchedule = generateSchedule();
-            await set(ref(db, `users/${currentUser.uid}/schedule`), newSchedule);
-        });
-
-        function generateSchedule() {
-            const days = ['Понеделник', 'Вторник', 'Сряда'];
-            const slots = [1, 2, 3, 4, 5, 6];
-            const newSchedule = {};
-            
-            const subjectPool = [];
-            Object.entries(subjects).forEach(([id, subject]) => {
-                for (let i = 0; i < subject.hours; i++) {
-                    subjectPool.push(subject.name);
-                }
-            });
-            
-            for (let i = subjectPool.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [subjectPool[i], subjectPool[j]] = [subjectPool[j], subjectPool[i]];
-            }
-            
-            let index = 0;
-            days.forEach(day => {
-                slots.forEach(slot => {
-                    newSchedule[`${day}-${slot}`] = subjectPool[index++] || '';
-                });
-            });
-            
-            return newSchedule;
-        }
-
-        function renderSchedule() {
-            if (Object.keys(schedule).length === 0) {
-                document.getElementById('scheduleContainer').innerHTML = '';
-                return;
-            }
-            
-            const days = ['Понеделник', 'Вторник', 'Сряда'];
-            const slots = [1, 2, 3, 4, 5, 6];
-            
-            let html = '<table class="schedule-table"><tr><th>Час</th>';
-            days.forEach(day => {
-                html += `<th>${day}</th>`;
-            });
-            html += '</tr>';
-            
-            slots.forEach(slot => {
-                html += `<tr><td><strong>${slot}</strong></td>`;
-                days.forEach(day => {
-                    html += `<td>${schedule[`${day}-${slot}`] || ''}</td>`;
-                });
-                html += '</tr>';
-            });
-            
-            html += '</table>';
-            document.getElementById('scheduleContainer').innerHTML = html;
-        }
-
-        // Grades
-        document.getElementById('gradeType').addEventListener('change', (e) => {
-            const valueGroup = document.getElementById('gradeValueGroup');
-            if (e.target.value === 'grade') {
-                valueGroup.style.display = 'block';
-            } else {
-                valueGroup.style.display = 'none';
-            }
-        });
-
-        document.getElementById('saveGradeBtn').addEventListener('click', async () => {
-            const studentId = document.getElementById('gradeStudent').value;
-            const subjectId = document.getElementById('gradeSubject').value;
-            const type = document.getElementById('gradeType').value;
-            const value = document.getElementById('gradeValue').value;
-            const reason = document.getElementById('gradeReason').value.trim();
-            
-            if (!studentId || !subjectId || !currentUser) {
-                showMessage('gradeMessage', 'Моля изберете ученик и предмет!', 'error');
-                return;
-            }
-            
-            if (type === 'grade' && (!value || value < 2 || value > 6)) {
-                showMessage('gradeMessage', 'Невалидна оценка!', 'error');
-                return;
-            }
-            
-            const gradeData = {
-                type,
-                subjectId,
-                reason,
-                timestamp: Date.now()
-            };
-            
-            if (type === 'grade') {
-                gradeData.value = parseFloat(value);
-            }
-            
-            const gradeRef = push(ref(db, `users/${currentUser.uid}/grades/${studentId}`));
-            await set(gradeRef, gradeData);
-            
-            document.getElementById('gradeValue').value = '';
-            document.getElementById('gradeReason').value = '';
-            showMessage('gradeMessage', 'Записът е запазен успешно!', 'success');
-        });
-
-        function updateGradeSelects() {
-            const studentSelect = document.getElementById('gradeStudent');
-            const subjectSelect = document.getElementById('gradeSubject');
-            
-            studentSelect.innerHTML = '<option value="">Избери ученик...</option>';
-            Object.entries(students).forEach(([id, student]) => {
-                studentSelect.innerHTML += `<option value="${id}">${student.name}</option>`;
-            });
-            
-            subjectSelect.innerHTML = '<option value="">Избери предмет...</option>';
-            Object.entries(subjects).forEach(([id, subject]) => {
-                subjectSelect.innerHTML += `<option value="${id}">${subject.name}</option>`;
-            });
-        }
-
-        // Diary
-        function renderDiary() {
-            const container = document.getElementById('diaryContainer');
-            
-            if (Object.keys(students).length === 0 || Object.keys(subjects).length === 0) {
-                container.innerHTML = '<div class="info-message">Добавете ученици и предмети, за да видите дневника.</div>';
-                return;
-            }
-            
-            let html = '<table class="diary-table"><thead><tr><th>Ученик</th>';
-            
-            Object.entries(subjects).forEach(([id, subject]) => {
-                html += `<th colspan="3">${subject.name}</th>`;
-            });
-            html += '</tr><tr><th></th>';
-            
-            Object.keys(subjects).forEach(() => {
-                html += '<th>Оценки</th><th>Похвали</th><th>Забележки</th>';
-            });
-            html += '</tr></thead><tbody>';
-            
-            Object.entries(students).forEach(([studentId, student]) => {
-                html += `<tr><td><strong>${student.name}</strong></td>`;
-                
-                Object.entries(subjects).forEach(([subjectId, subject]) => {
-                    const studentGrades = grades[studentId] || {};
-                    const subjectGrades = Object.entries(studentGrades).filter(([_, g]) => g.subjectId === subjectId);
-                    
-                    const gradesList = subjectGrades.filter(([_, g]) => g.type === 'grade');
-                    const praisesList = subjectGrades.filter(([_, g]) => g.type === 'praise');
-                    const remarksList = subjectGrades.filter(([_, g]) => g.type === 'remark');
-                    
-                    // Оценки
-                    html += '<td>';
-                    gradesList.forEach(([gradeId, grade]) => {
-                        html += `<div class="grade-item" onclick="deleteGrade('${studentId}', '${gradeId}')" title="${grade.reason}">${grade.value.toFixed(2)}</div>`;
-                    });
-                    if (gradesList.length > 0) {
-                        const avg = gradesList.reduce((sum, [_, g]) => sum + g.value, 0) / gradesList.length;
-                        html += `<div class="average">Ср: ${avg.toFixed(2)}</div>`;
+    Object.entries(students).forEach(([sid,s])=>{
+        html+=`<tr><td><b>${s.name}</b></td>`;
+        Object.keys(subjects).forEach(sub=>{
+            html+='<td>';
+            Object.entries(grades[sid]||{}).forEach(([gid,g])=>{
+                if(g.subjectId===sub){
+                    if(g.type==='grade'){
+                        html+=`
+                        <div class="grade-item" style="background:${gradeColor(g.value)}"
+                        onclick="showPopup('Оценка ${g.value}', '${g.reason}', ()=>deleteGrade('${sid}','${gid}'))">
+                        ${g.value.toFixed(2)}</div>`;
                     }
-                    html += '</td>';
-                    
-                    // Похвали
-                    html += '<td>';
-                    praisesList.forEach(([_, praise]) => {
-                        html += `<div>${praise.reason}</div>`;
-                    });
-                    html += '</td>';
-                    
-                    // Забележки
-                    html += '<td>';
-                    remarksList.forEach(([_, remark]) => {
-                        html += `<div>${remark.reason}</div>`;
-                    });
-                    html += '</td>';
-                });
-                
-                html += '</tr>';
+                }
             });
-            
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
+            html+='</td>';
+        });
+        html+='</tr>';
+    });
+    html+='</table>';
+    diaryContainer.innerHTML=html;
+}
 
-        window.deleteGrade = async (studentId, gradeId) => {
-            if (!currentUser || !confirm('Сигурни ли сте, че искате да изтриете тази оценка?')) return;
-            await remove(ref(db, `users/${currentUser.uid}/grades/${studentId}/${gradeId}`));
-        };
+onAuthStateChanged(auth,u=>{
+    user=u;
+    if(u){
+        document.getElementById('logoutBtn').style.display='block';
+        document.getElementById('authCard').style.display='none';
+        document.getElementById('mainMenu').classList.add('active');
 
-        // Load data
-        function loadData() {
-            if (!currentUser) return;
-            
-            onValue(ref(db, `users/${currentUser.uid}/students`), (snapshot) => {
-                students = snapshot.val() || {};
-                renderStudents();
-            });
-            
-            onValue(ref(db, `users/${currentUser.uid}/subjects`), (snapshot) => {
-                subjects = snapshot.val() || {};
-                renderSubjects();
-            });
-            
-            onValue(ref(db, `users/${currentUser.uid}/schedule`), (snapshot) => {
-                schedule = snapshot.val() || {};
-                renderSchedule();
-            });
-            
-            onValue(ref(db, `users/${currentUser.uid}/grades`), (snapshot) => {
-                grades = snapshot.val() || {};
-                renderDiary();
-            });
-        }
-
-        function showMessage(elementId, message, type) {
-            const el = document.getElementById(elementId);
-            el.className = type === 'success' ? 'success-message' : 'error-message';
-            el.textContent = message;
-            setTimeout(() => {
-                el.textContent = '';
-                el.className = '';
-            }, 3000);
-        }
-    </script>
+        onValue(ref(db,`users/${u.uid}/students`),s=>{students=s.val()||{};renderDiary()});
+        onValue(ref(db,`users/${u.uid}/subjects`),s=>{subjects=s.val()||{};renderDiary()});
+        onValue(ref(db,`users/${u.uid}/grades`),s=>{grades=s.val()||{};renderDiary()});
+    }
+});
+</script>
 </body>
 </html>
+
