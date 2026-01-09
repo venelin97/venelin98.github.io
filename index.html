@@ -211,16 +211,61 @@
         }
 
         .grade-item {
-            background: #e8f4f8;
-            padding: 5px;
+            padding: 8px 12px;
             margin: 3px;
-            border-radius: 3px;
+            border-radius: 5px;
             cursor: pointer;
             display: inline-block;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .grade-item:hover {
-            background: #ffcccc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .praise-item, .remark-item {
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .praise-item {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            font-weight: 500;
+            border-left: 4px solid #27ae60;
+        }
+
+        .remark-item {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            font-weight: 500;
+            border-left: 4px solid #c0392b;
+        }
+
+        .praise-item:hover, .remark-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+        }
+
+        .praise-item .icon, .remark-item .icon {
+            font-size: 16px;
+            margin-right: 8px;
+        }
+
+        .praise-item .text, .remark-item .text {
+            display: inline;
         }
 
         .average {
@@ -257,6 +302,110 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: #c0392b;
+            transform: rotate(90deg);
+        }
+
+        .modal h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .modal-field {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .modal-field label {
+            display: block;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .modal-field .value {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .modal-grade-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 768px) {
@@ -376,6 +525,16 @@
             <h2>Дневник</h2>
             <div id="diaryContainer"></div>
         </div>
+
+        <!-- MODAL POPUP -->
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal">
+                <button class="modal-close" id="modalClose">❌</button>
+                <h3 id="modalTitle">Детайли</h3>
+                <div id="modalContent"></div>
+                <button class="btn btn-danger" id="modalDeleteBtn" style="width: 100%; margin-top: 20px;">🗑️ Изтрий</button>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -383,8 +542,7 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getDatabase, ref, set, push, remove, onValue, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-        // Firebase конфигурация - ЗАМЕНИ С ТВОИТЕ ДАННИ
-       // Firebase конфигурация
+        // Firebase конфигурация
         const firebaseConfig = {
             apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
             authDomain: "dnevnik2-42909.firebaseapp.com",
@@ -411,6 +569,91 @@
         const gradesCard = document.getElementById('gradesCard');
         const diaryCard = document.getElementById('diaryCard');
         const mainMenu = document.getElementById('mainMenu');
+
+        // Функция за цветове на оценките
+        function gradeColor(value){
+            if(value >= 5.5) return 'linear-gradient(135deg, #2ecc71, #27ae60)'; // Зелено
+            if(value >= 4.5) return 'linear-gradient(135deg, #3498db, #2980b9)'; // Синьо
+            if(value >= 3.5) return 'linear-gradient(135deg, #f1c40f, #f39c12)'; // Жълто
+            if(value >= 2.5) return 'linear-gradient(135deg, #e67e22, #d35400)'; // Тъмно оранжево
+            return 'linear-gradient(135deg, #8e0e00, #c0392b)'; // Винено червено
+        }
+
+        // Modal функции
+        let currentModalData = null;
+
+        function openModal(studentId, gradeId, studentName, subjectName, gradeData) {
+            currentModalData = { studentId, gradeId };
+            
+            const modal = document.getElementById('modalOverlay');
+            const title = document.getElementById('modalTitle');
+            const content = document.getElementById('modalContent');
+            
+            let typeText = '';
+            if (gradeData.type === 'grade') typeText = '📝 Оценка';
+            else if (gradeData.type === 'praise') typeText = '⭐ Похвала';
+            else if (gradeData.type === 'remark') typeText = '⚠️ Забележка';
+            
+            title.textContent = `${studentName} - ${subjectName}`;
+            
+            let html = `
+                <div class="modal-field">
+                    <label>Тип:</label>
+                    <div class="value">${typeText}</div>
+                </div>
+            `;
+            
+            if (gradeData.type === 'grade') {
+                html += `
+                    <div class="modal-field">
+                        <label>Стойност:</label>
+                        <div class="value">
+                            <span class="modal-grade-badge" style="background: ${gradeColor(gradeData.value)}">
+                                ${gradeData.value.toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="modal-field">
+                    <label>Причина:</label>
+                    <div class="value">${gradeData.reason || 'Няма описание'}</div>
+                </div>
+                <div class="modal-field">
+                    <label>От кого:</label>
+                    <div class="value">${currentUser.email}</div>
+                </div>
+                <div class="modal-field">
+                    <label>Дата:</label>
+                    <div class="value">${new Date(gradeData.timestamp).toLocaleString('bg-BG')}</div>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            currentModalData = null;
+        }
+
+        document.getElementById('modalClose').addEventListener('click', closeModal);
+        document.getElementById('modalOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'modalOverlay') closeModal();
+        });
+
+        document.getElementById('modalDeleteBtn').addEventListener('click', async () => {
+            if (!currentModalData || !confirm('Сигурни ли сте, че искате да изтриете този запис?')) return;
+            
+            await remove(ref(db, `users/${currentUser.uid}/grades/${currentModalData.studentId}/${currentModalData.gradeId}`));
+            closeModal();
+        });
+
+        // Правим openModal глобална
+        window.openModal = openModal;
 
         // Auth
         document.getElementById('registerBtn').addEventListener('click', async () => {
@@ -480,15 +723,6 @@
                 }
             });
         });
-
-        function gradeColor(value){
-    if(value >= 5.5) return 'linear-gradient(135deg,#2ecc71,#27ae60)'; // 6
-    if(value >= 4.5) return 'linear-gradient(135deg,#3498db,#2980b9)'; // 5
-    if(value >= 3.5) return 'linear-gradient(135deg,#f1c40f,#f39c12)'; // 4
-    if(value >= 2.5) return 'linear-gradient(135deg,#e67e22,#d35400)'; // 3
-    return 'linear-gradient(135deg,#8e0e00,#c0392b)';                // 2
-}
-
 
         // Students
         document.getElementById('addStudentBtn').addEventListener('click', async () => {
@@ -727,7 +961,8 @@
                     // Оценки
                     html += '<td>';
                     gradesList.forEach(([gradeId, grade]) => {
-                        html += `<div class="grade-item" onclick="deleteGrade('${studentId}', '${gradeId}')" title="${grade.reason}">${grade.value.toFixed(2)}</div>`;
+                        const gradeBg = gradeColor(grade.value);
+                        html += `<div class="grade-item" style="background: ${gradeBg}" onclick="openModal('${studentId}', '${gradeId}', '${student.name}', '${subject.name}', ${JSON.stringify(grade).replace(/"/g, '&quot;')})" title="${grade.reason}">${grade.value.toFixed(2)}</div>`;
                     });
                     if (gradesList.length > 0) {
                         const avg = gradesList.reduce((sum, [_, g]) => sum + g.value, 0) / gradesList.length;
@@ -737,15 +972,21 @@
                     
                     // Похвали
                     html += '<td>';
-                    praisesList.forEach(([_, praise]) => {
-                        html += `<div>${praise.reason}</div>`;
+                    praisesList.forEach(([praiseId, praise]) => {
+                        html += `<div class="praise-item" onclick="openModal('${studentId}', '${praiseId}', '${student.name}', '${subject.name}', ${JSON.stringify(praise).replace(/"/g, '&quot;')})">
+                            <span class="icon">⭐</span>
+                            <span class="text">${praise.reason || 'Похвала'}</span>
+                        </div>`;
                     });
                     html += '</td>';
                     
                     // Забележки
                     html += '<td>';
-                    remarksList.forEach(([_, remark]) => {
-                        html += `<div>${remark.reason}</div>`;
+                    remarksList.forEach(([remarkId, remark]) => {
+                        html += `<div class="remark-item" onclick="openModal('${studentId}', '${remarkId}', '${student.name}', '${subject.name}', ${JSON.stringify(remark).replace(/"/g, '&quot;')})">
+                            <span class="icon">⚠️</span>
+                            <span class="text">${remark.reason || 'Забележка'}</span>
+                        </div>`;
                     });
                     html += '</td>';
                 });
@@ -756,11 +997,6 @@
             html += '</tbody></table>';
             container.innerHTML = html;
         }
-
-        window.deleteGrade = async (studentId, gradeId) => {
-            if (!currentUser || !confirm('Сигурни ли сте, че искате да изтриете тази оценка?')) return;
-            await remove(ref(db, `users/${currentUser.uid}/grades/${studentId}/${gradeId}`));
-        };
 
         // Load data
         function loadData() {
@@ -799,4 +1035,3 @@
     </script>
 </body>
 </html>
-
