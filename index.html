@@ -1,1037 +1,928 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="bg">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Електронен Дневник</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            color: #667eea;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .menu {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: none;
-        }
-
-        .menu.active {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .menu-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background: #667eea;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .menu-btn:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-        }
-
-        .menu-btn.active {
-            background: #764ba2;
-        }
-
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: none;
-        }
-
-        .card.active {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background: #667eea;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .btn:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-        }
-
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-danger {
-            background: #e74c3c;
-        }
-
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-
-        .btn-small {
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-
-        .list {
-            margin-top: 20px;
-        }
-
-        .list-item {
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .schedule-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .schedule-table th, .schedule-table td {
-            border: 2px solid #667eea;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .schedule-table th {
-            background: #667eea;
-            color: white;
-        }
-
-        .schedule-table td {
-            background: #f8f9fa;
-        }
-
-        .diary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            overflow-x: auto;
-            display: block;
-        }
-
-        .diary-table th, .diary-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-            min-width: 80px;
-        }
-
-        .diary-table th {
-            background: #667eea;
-            color: white;
-            position: sticky;
-            top: 0;
-        }
-
-        .diary-table td {
-            background: white;
-        }
-
-        .grade-item {
-            padding: 8px 12px;
-            margin: 3px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: inline-block;
-            color: white;
-            font-weight: bold;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .grade-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-
-        .praise-item, .remark-item {
-            padding: 10px 15px;
-            margin: 5px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: block;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-            text-align: left;
-            font-size: 13px;
-            line-height: 1.4;
-        }
-
-        .praise-item {
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
-            color: white;
-            font-weight: 500;
-            border-left: 4px solid #27ae60;
-        }
-
-        .remark-item {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-            font-weight: 500;
-            border-left: 4px solid #c0392b;
-        }
-
-        .praise-item:hover, .remark-item:hover {
-            transform: translateX(3px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-        }
-
-        .praise-item .icon, .remark-item .icon {
-            font-size: 16px;
-            margin-right: 8px;
-        }
-
-        .praise-item .text, .remark-item .text {
-            display: inline;
-        }
-
-        .average {
-            font-weight: bold;
-            color: #667eea;
-            margin-top: 5px;
-        }
-
-        .info-message {
-            padding: 15px;
-            background: #fff3cd;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            color: #856404;
-        }
-
-        .success-message {
-            padding: 15px;
-            background: #d4edda;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            color: #155724;
-        }
-
-        .error-message {
-            padding: 15px;
-            background: #f8d7da;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            color: #721c24;
-        }
-
-        .two-column {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.3s;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            position: relative;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            animation: slideUp 0.3s;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        .modal-close:hover {
-            background: #c0392b;
-            transform: rotate(90deg);
-        }
-
-        .modal h3 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-
-        .modal-field {
-            margin-bottom: 15px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .modal-field label {
-            display: block;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .modal-field .value {
-            color: #333;
-            font-size: 16px;
-        }
-
-        .modal-grade-badge {
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: bold;
-            font-size: 24px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translateY(50px);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .two-column {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Електронен Дневник</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px;}
+.container{max-width:1600px;margin:0 auto;}
+.header{background:white;padding:18px 24px;border-radius:12px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:3px solid #667eea;}
+.header h1{color:#667eea;font-size:21px;letter-spacing:-.4px;}
+.header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.semester-badge{padding:5px 14px;border-radius:20px;font-weight:600;font-size:13px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;cursor:pointer;transition:opacity .2s;user-select:none;}
+.semester-badge:hover{opacity:.82;}
+.menu{background:white;padding:12px 16px;border-radius:12px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08);display:none;gap:8px;flex-wrap:wrap;}
+.menu.active{display:flex;}
+.menu-btn{padding:9px 18px;border:none;border-radius:7px;background:#f0f0f5;color:#555;cursor:pointer;transition:all .2s;font-size:13px;font-weight:500;}
+.menu-btn:hover{background:#667eea;color:white;}
+.menu-btn.active{background:#667eea;color:white;box-shadow:0 2px 8px rgba(102,126,234,.3);}
+.card{background:white;padding:28px 30px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);display:none;}
+.card.active{display:block;}
+.card h2{color:#444;font-size:17px;margin-bottom:20px;padding-bottom:11px;border-bottom:2px solid #f0f0f5;}
+.form-group{margin-bottom:15px;}
+.form-group label{display:block;margin-bottom:5px;color:#555;font-weight:500;font-size:13px;}
+.form-group input,.form-group select{width:100%;padding:9px 12px;border:2px solid #e8e8f0;border-radius:7px;font-size:14px;transition:border .2s;background:white;}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#667eea;}
+.btn{padding:9px 18px;border:none;border-radius:7px;background:#667eea;color:white;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;}
+.btn:hover{background:#5a70d8;transform:translateY(-1px);}
+.btn:disabled{background:#ccc;cursor:not-allowed;transform:none;}
+.btn-danger{background:#e74c3c;}.btn-danger:hover{background:#c0392b;}
+.btn-success{background:#27ae60;}.btn-success:hover{background:#1e8449;}
+.btn-warning{background:#e67e22;}.btn-warning:hover{background:#d35400;}
+.btn-ghost{background:transparent;color:#667eea;border:2px solid #667eea;}.btn-ghost:hover{background:#667eea;color:white;}
+.btn-small{padding:5px 12px;font-size:12px;}
+.btn-xs{padding:3px 8px;font-size:11px;}
+.list{margin-top:16px;}
+.list-item{padding:12px 16px;background:#f8f9fb;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #eee;transition:border .15s;}
+.list-item:hover{border-color:#c5ceff;}
+.list-item-actions{display:flex;gap:6px;}
+.schedule-table{width:100%;border-collapse:collapse;margin-top:16px;}
+.schedule-table th,.schedule-table td{border:1px solid #d0d5f5;padding:10px 14px;text-align:center;font-size:13px;}
+.schedule-table th{background:#667eea;color:white;font-weight:600;}
+.schedule-table td{background:#fafafe;}
+.schedule-table tr:hover td{background:#f0f2ff;}
+.diary-wrapper{overflow-x:auto;margin-top:10px;}
+.diary-table{width:100%;border-collapse:collapse;}
+.diary-table th,.diary-table td{border:1px solid #e0e0e8;padding:7px 9px;text-align:center;min-width:75px;font-size:13px;}
+.diary-table th{background:#667eea;color:white;font-weight:600;position:sticky;top:0;z-index:2;}
+.diary-table th.sub-header{background:#7986cb;}
+.diary-table td{background:white;vertical-align:top;}
+.diary-table td.sname{text-align:left;font-weight:600;background:#f4f4f8;min-width:160px;position:sticky;left:0;z-index:1;color:#333;}
+.diary-table tbody tr:hover td{background:#fafafe;}
+.diary-table tbody tr:hover td.sname{background:#ebebf5;}
+.grade-item{padding:4px 8px;margin:2px;border-radius:5px;cursor:pointer;display:inline-block;color:white;font-weight:700;font-size:12px;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.18);}
+.grade-item:hover{transform:translateY(-2px);box-shadow:0 3px 7px rgba(0,0,0,.25);}
+.sem-badge{padding:4px 9px;border-radius:5px;display:inline-block;font-weight:700;font-size:12px;color:white;box-shadow:0 1px 3px rgba(0,0,0,.18);cursor:pointer;}
+.sem-badge:hover{transform:translateY(-1px);}
+.praise-item,.remark-item{padding:4px 8px;margin:2px 0;border-radius:5px;cursor:pointer;display:block;font-size:12px;transition:transform .15s;}
+.praise-item{background:#edfaf3;color:#1a7a40;border-left:3px solid #27ae60;}
+.remark-item{background:#fdf0f0;color:#a93226;border-left:3px solid #e74c3c;}
+.praise-item:hover,.remark-item:hover{transform:translateX(2px);}
+.grade-avg{font-weight:700;color:#667eea;font-size:11px;margin-top:3px;}
+.info-msg{padding:12px 16px;background:#f0f4ff;border-radius:8px;margin-bottom:14px;color:#4a5bad;border-left:3px solid #667eea;font-size:13px;}
+.success-msg{padding:12px 16px;background:#edfaf3;border-radius:8px;margin-bottom:14px;color:#1a6e3f;border-left:3px solid #27ae60;font-size:13px;}
+.error-msg{padding:12px 16px;background:#fdf0f0;border-radius:8px;margin-bottom:14px;color:#922b21;border-left:3px solid #e74c3c;font-size:13px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{padding:18px 14px;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;text-align:center;}
+.stat-card .val{font-size:26px;font-weight:700;}
+.stat-card .lbl{font-size:12px;opacity:.9;margin-top:4px;}
+.archive-item{padding:18px 20px;background:#f8f9fb;border-radius:10px;margin-bottom:14px;border-left:4px solid #667eea;}
+.archive-item h3{color:#555;margin-bottom:5px;font-size:15px;}
+.archive-meta{color:#999;font-size:12px;margin-bottom:10px;}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center;}
+.modal-overlay.active{display:flex;}
+.modal{background:white;border-radius:14px;padding:26px;max-width:480px;width:92%;position:relative;box-shadow:0 12px 40px rgba(0,0,0,.2);animation:slideUp .2s;}
+.modal-close{position:absolute;top:13px;right:13px;background:#f0f0f5;color:#666;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.modal-close:hover{background:#e74c3c;color:white;}
+.modal h3{color:#444;margin-bottom:16px;font-size:17px;}
+.modal-field{margin-bottom:11px;padding:10px 13px;background:#f8f9fb;border-radius:8px;}
+.modal-field label{display:block;font-weight:600;color:#888;margin-bottom:3px;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
+.modal-field .val{color:#333;font-size:14px;}
+.modal-grade-badge{display:inline-block;padding:6px 15px;border-radius:7px;color:white;font-weight:700;font-size:19px;box-shadow:0 3px 8px rgba(0,0,0,.2);}
+.modal-actions{display:flex;gap:8px;margin-top:14px;}
+.modal-actions .btn{flex:1;}
+.edit-row{display:flex;gap:8px;align-items:center;margin-top:5px;}
+.edit-row input,.edit-row select{flex:1;padding:7px 10px;border:2px solid #e0e0e8;border-radius:6px;font-size:13px;}
+.edit-row input:focus{outline:none;border-color:#667eea;}
+.confirm-modal{background:white;border-radius:14px;padding:26px;max-width:420px;width:92%;text-align:center;}
+.confirm-modal h3{margin-bottom:11px;font-size:17px;}
+.confirm-modal p{color:#555;margin-bottom:20px;line-height:1.65;font-size:13px;}
+.confirm-buttons{display:flex;gap:10px;justify-content:center;}
+.section-title{font-size:13px;font-weight:600;color:#667eea;margin:18px 0 10px;padding-bottom:5px;border-bottom:1px solid #eef;}
+hr{border:none;border-top:1px solid #f0f0f5;margin:16px 0;}
+@keyframes slideUp{from{opacity:0;transform:translateY(25px);}to{opacity:1;transform:translateY(0);}}
+/* Toast */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#2d2d3a;color:white;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:all .3s;z-index:9999;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:#f0f0f5;}
+::-webkit-scrollbar-thumb{background:#c5ceff;border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:#667eea;}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📚 Електронен Дневник</h1>
-            <div class="user-info">
-                <span id="userEmail"></span>
-                <button class="btn btn-small btn-danger" id="logoutBtn" style="display:none;">Изход</button>
-            </div>
-        </div>
+<div class="container">
+<div class="toast" id="toast"></div>
 
-        <div class="menu" id="mainMenu">
-            <button class="menu-btn active" data-section="students">Ученици</button>
-            <button class="menu-btn" data-section="subjects">Предмети и Програма</button>
-            <button class="menu-btn" data-section="grades">Въвеждане</button>
-            <button class="menu-btn" data-section="diary">Дневник</button>
-        </div>
+<div class="header">
+  <h1>Електронен Дневник</h1>
+  <div class="header-right">
+    <span class="semester-badge" id="semesterBadge" title="Кликни за преименуване"></span>
+    <span id="userEmail" style="font-size:13px;color:#aaa;"></span>
+    <button class="btn btn-small btn-warning" id="endSemesterBtn" style="display:none;">Приключи срок</button>
+    <button class="btn btn-small btn-danger" id="logoutBtn" style="display:none;">Изход</button>
+  </div>
+</div>
 
-        <!-- AUTH CARD -->
-        <div class="card active" id="authCard">
-            <h2>Вход / Регистрация</h2>
-            <div class="form-group">
-                <label>Имейл:</label>
-                <input type="email" id="authEmail" placeholder="teacher@school.bg">
-            </div>
-            <div class="form-group">
-                <label>Парола:</label>
-                <input type="password" id="authPassword" placeholder="********">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn" id="registerBtn">Регистрация</button>
-                <button class="btn" id="loginBtn">Вход</button>
-            </div>
-            <div id="authMessage" style="margin-top: 15px;"></div>
-        </div>
+<div class="menu" id="mainMenu">
+  <button class="menu-btn active" data-section="students">Ученици</button>
+  <button class="menu-btn" data-section="subjects">Предмети</button>
+  <button class="menu-btn" data-section="grades">Въвеждане</button>
+  <button class="menu-btn" data-section="diary">Дневник</button>
+  <button class="menu-btn" data-section="stats">Статистики</button>
+  <button class="menu-btn" data-section="archive">Архив</button>
+</div>
 
-        <!-- STUDENTS CARD -->
-        <div class="card" id="studentsCard">
-            <h2>Управление на ученици</h2>
-            <div class="form-group">
-                <label>Име на ученик:</label>
-                <input type="text" id="studentName" placeholder="Иван Иванов">
-            </div>
-            <button class="btn" id="addStudentBtn">Добави ученик</button>
-            <div class="list" id="studentsList"></div>
-        </div>
+<!-- AUTH -->
+<div class="card active" id="authCard">
+  <h2>Вход / Регистрация</h2>
+  <div class="form-group"><label>Имейл</label><input type="email" id="authEmail" placeholder="teacher@school.bg"></div>
+  <div class="form-group"><label>Парола</label><input type="password" id="authPassword" placeholder="••••••••"></div>
+  <div style="display:flex;gap:10px;">
+    <button class="btn" id="loginBtn">Вход</button>
+    <button class="btn btn-ghost" id="registerBtn">Регистрация</button>
+  </div>
+  <div id="authMessage" style="margin-top:14px;"></div>
+</div>
 
-        <!-- SUBJECTS CARD -->
-        <div class="card" id="subjectsCard">
-            <h2>Предмети и Програма</h2>
-            <div class="two-column">
-                <div>
-                    <div class="form-group">
-                        <label>Име на предмет:</label>
-                        <input type="text" id="subjectName" placeholder="Математика">
-                    </div>
-                    <div class="form-group">
-                        <label>Часове на седмица:</label>
-                        <input type="number" id="subjectHours" min="1" max="18" placeholder="3">
-                    </div>
-                    <button class="btn" id="addSubjectBtn">Добави предмет</button>
-                    <div class="list" id="subjectsList"></div>
-                </div>
-                <div>
-                    <div id="scheduleInfo"></div>
-                    <button class="btn" id="generateScheduleBtn" disabled>Генерирай програма</button>
-                    <div id="scheduleContainer"></div>
-                </div>
-            </div>
-        </div>
+<!-- STUDENTS -->
+<div class="card" id="studentsCard">
+  <h2>Ученици</h2>
+  <div style="display:flex;gap:10px;align-items:flex-end;">
+    <div class="form-group" style="flex:1;margin-bottom:0;"><label>Ime на ученик</label><input type="text" id="studentName" placeholder="Иван Иванов"></div>
+    <button class="btn" id="addStudentBtn" style="margin-bottom:0;">Добави</button>
+  </div>
+  <div class="list" id="studentsList"></div>
+</div>
 
-        <!-- GRADES CARD -->
-        <div class="card" id="gradesCard">
-            <h2>Въвеждане на оценки / похвали / забележки</h2>
-            <div class="form-group">
-                <label>Ученик:</label>
-                <select id="gradeStudent">
-                    <option value="">Избери ученик...</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Предмет:</label>
-                <select id="gradeSubject">
-                    <option value="">Избери предмет...</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Тип:</label>
-                <select id="gradeType">
-                    <option value="grade">Оценка</option>
-                    <option value="praise">Похвала</option>
-                    <option value="remark">Забележка</option>
-                </select>
-            </div>
-            <div class="form-group" id="gradeValueGroup">
-                <label>Оценка (2-6):</label>
-                <input type="number" id="gradeValue" min="2" max="6" step="0.01" placeholder="6.00">
-            </div>
-            <div class="form-group">
-                <label>Причина/Описание:</label>
-                <input type="text" id="gradeReason" placeholder="Контролно по алгебра">
-            </div>
-            <button class="btn" id="saveGradeBtn">Запази</button>
-            <div id="gradeMessage" style="margin-top: 15px;"></div>
-        </div>
-
-        <!-- DIARY CARD -->
-        <div class="card" id="diaryCard">
-            <h2>Дневник</h2>
-            <div id="diaryContainer"></div>
-        </div>
-
-        <!-- MODAL POPUP -->
-        <div class="modal-overlay" id="modalOverlay">
-            <div class="modal">
-                <button class="modal-close" id="modalClose">❌</button>
-                <h3 id="modalTitle">Детайли</h3>
-                <div id="modalContent"></div>
-                <button class="btn btn-danger" id="modalDeleteBtn" style="width: 100%; margin-top: 20px;">🗑️ Изтрий</button>
-            </div>
-        </div>
+<!-- SUBJECTS -->
+<div class="card" id="subjectsCard">
+  <h2>Предмети и Програма</h2>
+  <div class="two-col">
+    <div>
+      <div class="section-title" style="margin-top:0;">Добавяне на предмет</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="form-group" style="flex:2;min-width:120px;"><label>Предмет</label><input type="text" id="subjectName" placeholder="Математика"></div>
+        <div class="form-group" style="flex:1;min-width:80px;"><label>Часове/седм.</label><input type="number" id="subjectHours" min="1" max="6" placeholder="3"></div>
+      </div>
+      <button class="btn" id="addSubjectBtn">Добави предмет</button>
+      <div class="list" id="subjectsList"></div>
     </div>
+    <div>
+      <div class="section-title" style="margin-top:0;">Програма</div>
+      <div id="scheduleInfo"></div>
+      <div class="form-group">
+        <label>Часове по дни — пр: <code>6,6,6</code> за 3 дни по 6 часа</label>
+        <input type="text" id="slotsPerDay" placeholder="6,6,6">
+      </div>
+      <button class="btn" id="generateScheduleBtn" disabled>Генерирай програма</button>
+      <div id="scheduleContainer"></div>
+    </div>
+  </div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getDatabase, ref, set, push, remove, onValue, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+<!-- GRADES INPUT -->
+<div class="card" id="gradesCard">
+  <h2>Въвеждане</h2>
+  <div class="two-col">
+    <div>
+      <div class="form-group"><label>Ученик</label>
+        <select id="gradeStudent"><option value="">Избери ученик...</option></select>
+      </div>
+      <div class="form-group"><label>Предмет</label>
+        <select id="gradeSubject"><option value="">Избери предмет...</option></select>
+      </div>
+      <div class="form-group"><label>Тип</label>
+        <select id="gradeType">
+          <option value="grade">Оценка</option>
+          <option value="semester_grade">Срочна оценка</option>
+          <option value="praise">Похвала</option>
+          <option value="remark">Забележка</option>
+        </select>
+      </div>
+      <div class="form-group" id="gradeValueGroup">
+        <label>Стойност (2–6)</label>
+        <input type="number" id="gradeValue" min="2" max="6" step="0.01" placeholder="6.00">
+      </div>
+      <div class="form-group">
+        <label>Описание / Причина</label>
+        <input type="text" id="gradeReason" placeholder="Контролно по алгебра">
+      </div>
+      <button class="btn" id="saveGradeBtn">Запази</button>
+      <div id="gradeMessage" style="margin-top:12px;"></div>
+    </div>
+    <div>
+      <div class="info-msg" style="margin-top:0;">
+        <strong>Оценка</strong> — текуща оценка от час.<br><br>
+        <strong>Срочна оценка</strong> — крайната оценка за срока по даден предмет; показва се в отделна колона в дневника и се пренася при архивиране.<br><br>
+        <strong>Похвала / Забележка</strong> — поведение, видимо в дневника.
+      </div>
+    </div>
+  </div>
+</div>
 
-        // Firebase конфигурация
-        const firebaseConfig = {
-            apiKey: "AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
-            authDomain: "dnevnik2-42909.firebaseapp.com",
-            databaseURL: "https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "dnevnik2-42909",
-            storageBucket: "dnevnik2-42909.appspot.com",
-            messagingSenderId: "824393263608",
-            appId: "1:824393263608:web:eb35cff1cab09a16eace0d"
-        };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
+<!-- DIARY -->
+<div class="card" id="diaryCard">
+  <h2>Дневник</h2>
+  <div id="diaryContainer"></div>
+</div>
 
-        let currentUser = null;
-        let students = {};
-        let subjects = {};
-        let schedule = {};
-        let grades = {};
+<!-- STATS -->
+<div class="card" id="statsCard">
+  <h2>Статистики</h2>
+  <div id="statsContainer"></div>
+</div>
 
-        // DOM елементи
-        const authCard = document.getElementById('authCard');
-        const studentsCard = document.getElementById('studentsCard');
-        const subjectsCard = document.getElementById('subjectsCard');
-        const gradesCard = document.getElementById('gradesCard');
-        const diaryCard = document.getElementById('diaryCard');
-        const mainMenu = document.getElementById('mainMenu');
+<!-- ARCHIVE -->
+<div class="card" id="archiveCard">
+  <h2>Архив</h2>
+  <div id="archiveContainer"></div>
+</div>
 
-        // Функция за цветове на оценките
-        function gradeColor(value){
-            if(value >= 5.5) return 'linear-gradient(135deg, #2ecc71, #27ae60)'; // Зелено
-            if(value >= 4.5) return 'linear-gradient(135deg, #3498db, #2980b9)'; // Синьо
-            if(value >= 3.5) return 'linear-gradient(135deg, #f1c40f, #f39c12)'; // Жълто
-            if(value >= 2.5) return 'linear-gradient(135deg, #e67e22, #d35400)'; // Тъмно оранжево
-            return 'linear-gradient(135deg, #8e0e00, #c0392b)'; // Винено червено
+<!-- DETAIL/EDIT MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <h3 id="modalTitle"></h3>
+    <div id="modalContent"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<!-- END SEMESTER CONFIRM -->
+<div class="modal-overlay" id="endSemesterModal">
+  <div class="confirm-modal">
+    <h3 style="color:#e67e22;">Приключване на срок</h3>
+    <p>Текущите данни ще се <strong>запазят в архива</strong>.<br>
+    Новият срок ще започне с <strong>същите ученици и предмети</strong>.<br>
+    Дневникът ще се изчисти — само срочните оценки ще се пренесат като история.</p>
+    <div class="form-group" style="text-align:left;">
+      <label style="font-size:13px;font-weight:600;">Как да се казва новият срок?</label>
+      <input type="text" id="newSemesterName" placeholder="2-ри срок" style="margin-top:5px;">
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn btn-danger" id="cancelEndSemester">Откажи</button>
+      <button class="btn btn-success" id="confirmEndSemester">Архивирай и продължи</button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME SEMESTER -->
+<div class="modal-overlay" id="renameSemModal">
+  <div class="confirm-modal">
+    <h3 style="color:#667eea;">Преименуване</h3>
+    <div class="form-group" style="text-align:left;">
+      <label style="font-size:13px;font-weight:600;">Ново название на срока</label>
+      <input type="text" id="renameSemInput" placeholder="1-ви срок" style="margin-top:5px;">
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn btn-danger" id="cancelRenameSem">Откажи</button>
+      <button class="btn btn-success" id="confirmRenameSem">Запази</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getDatabase, ref, set, push, remove, onValue, get, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyDHYqfKhUfIYaB1IYoTGwzqSR4OSO49daw",
+  authDomain:"dnevnik2-42909.firebaseapp.com",
+  databaseURL:"https://dnevnik2-42909-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"dnevnik2-42909",
+  storageBucket:"dnevnik2-42909.appspot.com",
+  messagingSenderId:"824393263608",
+  appId:"1:824393263608:web:eb35cff1cab09a16eace0d"
+};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getDatabase(app);
+
+let currentUser=null,students={},subjects={},schedule={},grades={};
+let currentSemesterKey='semester_1',currentSemesterName='1-ви срок';
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+function gradeColor(v){
+  if(v>=5.5) return 'linear-gradient(135deg,#2ecc71,#27ae60)';
+  if(v>=4.5) return 'linear-gradient(135deg,#3498db,#2980b9)';
+  if(v>=3.5) return 'linear-gradient(135deg,#e8c84a,#d4a017)';
+  if(v>=2.5) return 'linear-gradient(135deg,#e67e22,#d35400)';
+  return 'linear-gradient(135deg,#e74c3c,#c0392b)';
+}
+function showMsg(id,text,type){
+  const el=document.getElementById(id);
+  el.className=type==='success'?'success-msg':'error-msg';
+  el.textContent=text;
+  setTimeout(()=>{el.textContent='';el.className='';},3500);
+}
+function toast(msg,duration=3500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),duration);
+}
+function escQ(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
+
+// ─── SCHEDULE ─────────────────────────────────────────────────────────────
+function generateSchedule(){
+  const DAYS=['Понеделник','Вторник','Сряда','Четвъртък','Петък'];
+  const rawSlots=document.getElementById('slotsPerDay').value.trim();
+  const subjectArr=Object.entries(subjects);
+  const totalHours=subjectArr.reduce((s,[,sub])=>s+sub.hours,0);
+  if(!totalHours) return {};
+
+  let slotsConfig=[];
+  if(rawSlots){
+    slotsConfig=rawSlots.split(',').map(x=>Math.min(8,Math.max(1,parseInt(x.trim())||6)));
+  }
+
+  let activeDays=[],daySlotCounts=[];
+  if(slotsConfig.length>0){
+    for(let i=0;i<Math.min(slotsConfig.length,5);i++){activeDays.push(DAYS[i]);daySlotCounts.push(slotsConfig[i]);}
+    let cap=daySlotCounts.reduce((a,b)=>a+b,0);
+    while(cap<totalHours&&activeDays.length<5){
+      activeDays.push(DAYS[activeDays.length]);daySlotCounts.push(6);cap+=6;
+    }
+  } else {
+    const nd=Math.min(5,Math.max(3,Math.ceil(totalHours/6)));
+    for(let i=0;i<nd;i++){activeDays.push(DAYS[i]);daySlotCounts.push(6);}
+  }
+
+  const daySlots=activeDays.map((_,di)=>Array(daySlotCounts[di]).fill(null));
+  const dayCount=activeDays.map(()=>({}));
+  const shuffled=[...subjectArr].sort(()=>Math.random()-.5);
+
+  for(const [sid,subj] of shuffled){
+    let remaining=subj.hours;
+    const daysOrder=activeDays.map((_,i)=>i).sort(()=>Math.random()-.5);
+    // Place one-by-one on separate days as much as possible.
+    // Only fall back to a block (2 on same day) when no other day is free.
+    while(remaining>0){
+      let placed=false;
+      // First try: place single on a day that has 0 of this subject
+      for(const di of daysOrder){
+        if((dayCount[di][sid]||0)>0) continue;
+        const free=daySlots[di].findIndex(x=>x===null);
+        if(free!==-1){
+          daySlots[di][free]={name:subj.name};
+          dayCount[di][sid]=(dayCount[di][sid]||0)+1;
+          remaining--;placed=true;break;
         }
-
-        // Modal функции
-        let currentModalData = null;
-
-        function openModal(studentId, gradeId, studentName, subjectName, gradeData) {
-            currentModalData = { studentId, gradeId };
-            
-            const modal = document.getElementById('modalOverlay');
-            const title = document.getElementById('modalTitle');
-            const content = document.getElementById('modalContent');
-            
-            let typeText = '';
-            if (gradeData.type === 'grade') typeText = '📝 Оценка';
-            else if (gradeData.type === 'praise') typeText = '⭐ Похвала';
-            else if (gradeData.type === 'remark') typeText = '⚠️ Забележка';
-            
-            title.textContent = `${studentName} - ${subjectName}`;
-            
-            let html = `
-                <div class="modal-field">
-                    <label>Тип:</label>
-                    <div class="value">${typeText}</div>
-                </div>
-            `;
-            
-            if (gradeData.type === 'grade') {
-                html += `
-                    <div class="modal-field">
-                        <label>Стойност:</label>
-                        <div class="value">
-                            <span class="modal-grade-badge" style="background: ${gradeColor(gradeData.value)}">
-                                ${gradeData.value.toFixed(2)}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            html += `
-                <div class="modal-field">
-                    <label>Причина:</label>
-                    <div class="value">${gradeData.reason || 'Няма описание'}</div>
-                </div>
-                <div class="modal-field">
-                    <label>От кого:</label>
-                    <div class="value">${currentUser.email}</div>
-                </div>
-                <div class="modal-field">
-                    <label>Дата:</label>
-                    <div class="value">${new Date(gradeData.timestamp).toLocaleString('bg-BG')}</div>
-                </div>
-            `;
-            
-            content.innerHTML = html;
-            modal.classList.add('active');
+      }
+      if(!placed){
+        // Second try: place single on a day that already has 1 (max 2 per day)
+        for(const di of daysOrder){
+          if((dayCount[di][sid]||0)>=2) continue;
+          const free=daySlots[di].findIndex(x=>x===null);
+          if(free!==-1){
+            daySlots[di][free]={name:subj.name};
+            dayCount[di][sid]=(dayCount[di][sid]||0)+1;
+            remaining--;placed=true;break;
+          }
         }
+      }
+      if(!placed) break;
+    }
+  }
 
-        function closeModal() {
-            document.getElementById('modalOverlay').classList.remove('active');
-            currentModalData = null;
-        }
+  const result={_days:activeDays,_slotsPerDay:daySlotCounts};
+  activeDays.forEach((day,di)=>{
+    daySlots[di].forEach((cell,si)=>{
+      result[`${day}-${si+1}`]={name:cell?cell.name:''};
+    });
+  });
+  return result;
+}
 
-        document.getElementById('modalClose').addEventListener('click', closeModal);
-        document.getElementById('modalOverlay').addEventListener('click', (e) => {
-            if (e.target.id === 'modalOverlay') closeModal();
-        });
+function renderSchedule(){
+  const c=document.getElementById('scheduleContainer');
+  if(!schedule||!schedule._days||!schedule._days.length){c.innerHTML='';return;}
+  const days=schedule._days;
+  const spd=schedule._slotsPerDay||days.map(()=>6);
+  const maxSlots=Math.max(...spd);
+  let html=`<table class="schedule-table"><tr><th>Час</th>`;
+  days.forEach(d=>html+=`<th>${d}</th>`);
+  html+='</tr>';
+  for(let s=1;s<=maxSlots;s++){
+    html+=`<tr><td><strong>${s}</strong></td>`;
+    days.forEach((d,di)=>{
+      if(s>spd[di]){html+='<td style="background:#f0f0f0;color:#ccc;">—</td>';return;}
+      const cell=schedule[`${d}-${s}`]||{name:''};
+      html+=`<td>${cell.name||''}</td>`;
+    });
+    html+='</tr>';
+  }
+  html+='</table>';
+  c.innerHTML=html;
+}
 
-        document.getElementById('modalDeleteBtn').addEventListener('click', async () => {
-            if (!currentModalData || !confirm('Сигурни ли сте, че искате да изтриете този запис?')) return;
-            
-            await remove(ref(db, `users/${currentUser.uid}/grades/${currentModalData.studentId}/${currentModalData.gradeId}`));
-            closeModal();
-        });
+// ─── STUDENTS ────────────────────────────────────────────────────────────────
+document.getElementById('addStudentBtn').addEventListener('click',async()=>{
+  const name=document.getElementById('studentName').value.trim();
+  if(!name||!currentUser) return;
+  await push(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/students`),{name});
+  document.getElementById('studentName').value='';
+});
 
-        // Правим openModal глобална
-        window.openModal = openModal;
+function renderStudents(){
+  const list=document.getElementById('studentsList');
+  list.innerHTML='';
+  const entries=Object.entries(students);
+  if(!entries.length){list.innerHTML='<div class="info-msg">Няма добавени ученици.</div>';return;}
+  entries.forEach(([id,s])=>{
+    const item=document.createElement('div');
+    item.className='list-item';
+    item.innerHTML=`<span>${s.name}</span>
+      <div class="list-item-actions">
+        <button class="btn btn-xs btn-ghost" onclick="editStudent('${id}','${escQ(s.name)}')">Редактирай</button>
+        <button class="btn btn-xs btn-danger" onclick="removeStudent('${id}')">Премахни</button>
+      </div>`;
+    list.appendChild(item);
+  });
+  updateGradeSelects();
+}
 
-        // Auth
-        document.getElementById('registerBtn').addEventListener('click', async () => {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            try {
-                await createUserWithEmailAndPassword(auth, email, password);
-                showMessage('authMessage', 'Успешна регистрация!', 'success');
-            } catch (error) {
-                showMessage('authMessage', 'Грешка: ' + error.message, 'error');
-            }
-        });
+window.editStudent=(id,name)=>{
+  const n=prompt('Ново име:',name.replace(/&quot;/g,'"'));
+  if(!n||!n.trim()||n.trim()===name) return;
+  set(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/students/${id}`),{name:n.trim()});
+};
+window.removeStudent=async(id)=>{
+  if(!confirm('Изтриване на ученика и всичките му записи?')) return;
+  await remove(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/students/${id}`));
+  await remove(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/grades/${id}`));
+};
 
-        document.getElementById('loginBtn').addEventListener('click', async () => {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                showMessage('authMessage', 'Успешен вход!', 'success');
-            } catch (error) {
-                showMessage('authMessage', 'Грешка: ' + error.message, 'error');
-            }
-        });
+// ─── SUBJECTS ────────────────────────────────────────────────────────────────
+document.getElementById('addSubjectBtn').addEventListener('click',async()=>{
+  const name=document.getElementById('subjectName').value.trim();
+  const hours=parseInt(document.getElementById('subjectHours').value);
+  if(!name||!hours||!currentUser) return;
+  if(hours<1||hours>6){alert('Между 1 и 6 часа на седмица.');return;}
+  await push(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/subjects`),{name,hours});
+  document.getElementById('subjectName').value='';
+  document.getElementById('subjectHours').value='';
+});
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            signOut(auth);
-        });
+function renderSubjects(){
+  const list=document.getElementById('subjectsList');
+  list.innerHTML='';
+  const entries=Object.entries(subjects);
+  if(!entries.length){list.innerHTML='<div class="info-msg">Няма добавени предмети.</div>';return;}
+  let total=0;
+  entries.forEach(([id,s])=>{
+    total+=s.hours;
+    const item=document.createElement('div');
+    item.className='list-item';
+    item.innerHTML=`<span>${s.name} <span style="color:#aaa;font-size:12px;">${s.hours} ч./седм.</span></span>
+      <div class="list-item-actions">
+        <button class="btn btn-xs btn-ghost" onclick="editSubject('${id}','${escQ(s.name)}',${s.hours})">Редактирай</button>
+        <button class="btn btn-xs btn-danger" onclick="removeSubject('${id}')">Премахни</button>
+      </div>`;
+    list.appendChild(item);
+  });
+  document.getElementById('scheduleInfo').innerHTML=`<div class="info-msg">${entries.length} предмета, общо <strong>${total} ч./седм.</strong></div>`;
+  document.getElementById('generateScheduleBtn').disabled=total===0;
+  updateGradeSelects();
+}
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('userEmail').textContent = user.email;
-                document.getElementById('logoutBtn').style.display = 'block';
-                authCard.classList.remove('active');
-                mainMenu.classList.add('active');
-                studentsCard.classList.add('active');
-                loadData();
-            } else {
-                currentUser = null;
-                document.getElementById('userEmail').textContent = '';
-                document.getElementById('logoutBtn').style.display = 'none';
-                authCard.classList.add('active');
-                mainMenu.classList.remove('active');
-                studentsCard.classList.remove('active');
-                subjectsCard.classList.remove('active');
-                gradesCard.classList.remove('active');
-                diaryCard.classList.remove('active');
-            }
-        });
+window.editSubject=(id,name,hours)=>{
+  const n=prompt('Ново название:',name.replace(/&quot;/g,'"'));
+  if(!n||!n.trim()) return;
+  const h=parseInt(prompt('Нов брой часове/седмица:',hours));
+  if(!h||h<1||h>6){alert('Невалидно.');return;}
+  set(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/subjects/${id}`),{name:n.trim(),hours:h});
+};
+window.removeSubject=async(id)=>{
+  if(!confirm('Изтриване на предмета?')) return;
+  await remove(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/subjects/${id}`));
+};
+document.getElementById('generateScheduleBtn').addEventListener('click',async()=>{
+  if(!currentUser) return;
+  await set(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/schedule`),generateSchedule());
+});
 
-        // Menu navigation
-        document.querySelectorAll('.menu-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                const section = btn.dataset.section;
-                studentsCard.classList.remove('active');
-                subjectsCard.classList.remove('active');
-                gradesCard.classList.remove('active');
-                diaryCard.classList.remove('active');
-                
-                document.getElementById(section + 'Card').classList.add('active');
-                
-                if (section === 'diary') {
-                    renderDiary();
-                }
-            });
-        });
+// ─── GRADES INPUT ─────────────────────────────────────────────────────────────
+document.getElementById('gradeType').addEventListener('change',e=>{
+  document.getElementById('gradeValueGroup').style.display=
+    ['grade','semester_grade'].includes(e.target.value)?'block':'none';
+});
 
-        // Students
-        document.getElementById('addStudentBtn').addEventListener('click', async () => {
-            const name = document.getElementById('studentName').value.trim();
-            if (!name || !currentUser) return;
-            
-            const studentRef = push(ref(db, `users/${currentUser.uid}/students`));
-            await set(studentRef, { name });
-            document.getElementById('studentName').value = '';
-        });
+document.getElementById('saveGradeBtn').addEventListener('click',async()=>{
+  const studentId=document.getElementById('gradeStudent').value;
+  const subjectId=document.getElementById('gradeSubject').value;
+  const type=document.getElementById('gradeType').value;
+  const value=document.getElementById('gradeValue').value;
+  const reason=document.getElementById('gradeReason').value.trim();
+  if(!studentId||!subjectId){showMsg('gradeMessage','Избери ученик и предмет!','error');return;}
+  if(['grade','semester_grade'].includes(type)&&(!value||+value<2||+value>6)){showMsg('gradeMessage','Невалидна оценка (2–6)!','error');return;}
+  const data={type,subjectId,reason,timestamp:Date.now()};
+  if(['grade','semester_grade'].includes(type)) data.value=parseFloat((+value).toFixed(2));
+  if(type==='semester_grade'){
+    await set(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/grades/${studentId}/semgrade_${subjectId}`),data);
+  } else {
+    await push(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/grades/${studentId}`),data);
+  }
+  document.getElementById('gradeValue').value='';
+  document.getElementById('gradeReason').value='';
+  showMsg('gradeMessage','Записано успешно!','success');
+});
 
-        function renderStudents() {
-            const list = document.getElementById('studentsList');
-            list.innerHTML = '';
-            
-            Object.entries(students).forEach(([id, student]) => {
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                item.innerHTML = `
-                    <span>${student.name}</span>
-                    <button class="btn btn-small btn-danger" onclick="removeStudent('${id}')">Премахни</button>
-                `;
-                list.appendChild(item);
-            });
-            
-            updateGradeSelects();
-        }
+function updateGradeSelects(){
+  const ss=document.getElementById('gradeStudent'),su=document.getElementById('gradeSubject');
+  const sv=ss.value,suv=su.value;
+  ss.innerHTML='<option value="">Избери ученик...</option>';
+  Object.entries(students).forEach(([id,s])=>ss.innerHTML+=`<option value="${id}">${s.name}</option>`);
+  su.innerHTML='<option value="">Избери предмет...</option>';
+  Object.entries(subjects).forEach(([id,s])=>su.innerHTML+=`<option value="${id}">${s.name}</option>`);
+  if(sv) ss.value=sv;
+  if(suv) su.value=suv;
+}
 
-        window.removeStudent = async (id) => {
-            if (!currentUser) return;
-            await remove(ref(db, `users/${currentUser.uid}/students/${id}`));
-            await remove(ref(db, `users/${currentUser.uid}/grades/${id}`));
-        };
+// ─── DIARY ───────────────────────────────────────────────────────────────────
+function renderDiary(){
+  const c=document.getElementById('diaryContainer');
+  const subArr=Object.entries(subjects),stuArr=Object.entries(students);
+  if(!stuArr.length||!subArr.length){c.innerHTML='<div class="info-msg">Добавете ученици и предмети.</div>';return;}
 
-        // Subjects
-        document.getElementById('addSubjectBtn').addEventListener('click', async () => {
-            const name = document.getElementById('subjectName').value.trim();
-            const hours = parseInt(document.getElementById('subjectHours').value);
-            
-            if (!name || !hours || !currentUser) return;
-            
-            const subjectRef = push(ref(db, `users/${currentUser.uid}/subjects`));
-            await set(subjectRef, { name, hours });
-            
-            document.getElementById('subjectName').value = '';
-            document.getElementById('subjectHours').value = '';
-        });
+  let html='<div class="diary-wrapper"><table class="diary-table"><thead>';
+  html+='<tr><th rowspan="2" style="min-width:160px;">Ученик</th>';
+  subArr.forEach(([,s])=>html+=`<th colspan="3" class="sub-header">${s.name}</th>`);
+  html+='</tr><tr>';
+  subArr.forEach(()=>html+='<th>Оценки</th><th>Срочна</th><th>Бележки</th>');
+  html+='</tr></thead><tbody>';
 
-        function renderSubjects() {
-            const list = document.getElementById('subjectsList');
-            list.innerHTML = '';
-            
-            let totalHours = 0;
-            Object.entries(subjects).forEach(([id, subject]) => {
-                totalHours += subject.hours;
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                item.innerHTML = `
-                    <span>${subject.name} (${subject.hours}ч.)</span>
-                    <button class="btn btn-small btn-danger" onclick="removeSubject('${id}')">Премахни</button>
-                `;
-                list.appendChild(item);
-            });
-            
-            const info = document.getElementById('scheduleInfo');
-            if (totalHours === 18) {
-                info.innerHTML = '<div class="success-message">✓ Общо часове: 18. Можете да генерирате програма!</div>';
-                document.getElementById('generateScheduleBtn').disabled = false;
-            } else {
-                info.innerHTML = `<div class="info-message">Общо часове: ${totalHours}/18. Нужни са точно 18 часа.</div>`;
-                document.getElementById('generateScheduleBtn').disabled = true;
-            }
-            
-            updateGradeSelects();
-        }
+  stuArr.forEach(([sid,student])=>{
+    const sg=grades[sid]||{};
+    html+=`<tr><td class="sname">${student.name}</td>`;
+    subArr.forEach(([subId,subj])=>{
+      const entries=Object.entries(sg).filter(([,g])=>g.subjectId===subId);
+      const grs=entries.filter(([,g])=>g.type==='grade');
+      const semE=sg[`semgrade_${subId}`];
+      const prevE=sg[`prevsem_${subId}`];
+      const praises=entries.filter(([,g])=>g.type==='praise');
+      const remarks=entries.filter(([,g])=>g.type==='remark');
 
-        window.removeSubject = async (id) => {
-            if (!currentUser) return;
-            await remove(ref(db, `users/${currentUser.uid}/subjects/${id}`));
-        };
+      // Grades
+      html+='<td>';
+      grs.forEach(([gid,g])=>{
+        const gd=JSON.stringify(g).replace(/"/g,'&quot;');
+        html+=`<span class="grade-item" style="background:${gradeColor(g.value)}" onclick="openModal('${sid}','${gid}','${escQ(student.name)}','${escQ(subj.name)}',${gd})">${g.value.toFixed(2)}</span>`;
+      });
+      if(grs.length){const avg=grs.reduce((s,[,g])=>s+g.value,0)/grs.length;html+=`<div class="grade-avg">Ср: ${avg.toFixed(2)}</div>`;}
+      html+='</td>';
 
-        document.getElementById('generateScheduleBtn').addEventListener('click', async () => {
-            if (!currentUser) return;
-            
-            const newSchedule = generateSchedule();
-            await set(ref(db, `users/${currentUser.uid}/schedule`), newSchedule);
-        });
+      // Semester grade
+      html+='<td style="min-width:75px;">';
+      if(semE){
+        const gd=JSON.stringify(semE).replace(/"/g,'&quot;');
+        html+=`<span class="sem-badge" style="background:${gradeColor(semE.value)}" onclick="openModal('${sid}','semgrade_${subId}','${escQ(student.name)}','${escQ(subj.name)}',${gd})">${Math.round(semE.value)}</span>`;
+      }
+      if(prevE){
+        const gd=JSON.stringify(prevE).replace(/"/g,'&quot;');
+        html+=`<span class="sem-badge" style="background:${gradeColor(prevE.value)};opacity:.65;font-size:11px;" onclick="openModal('${sid}','prevsem_${subId}','${escQ(student.name)}','${escQ(subj.name)}',${gd})" title="От предходен срок: ${prevE.fromSemester||''}">${Math.round(prevE.value)}</span>`;
+      }
+      if(!semE&&!prevE) html+='<span style="color:#ddd;font-size:11px;">—</span>';
+      html+='</td>';
 
-        function generateSchedule() {
-            const days = ['Понеделник', 'Вторник', 'Сряда'];
-            const slots = [1, 2, 3, 4, 5, 6];
-            const newSchedule = {};
-            
-            const subjectPool = [];
-            Object.entries(subjects).forEach(([id, subject]) => {
-                for (let i = 0; i < subject.hours; i++) {
-                    subjectPool.push(subject.name);
-                }
-            });
-            
-            for (let i = subjectPool.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [subjectPool[i], subjectPool[j]] = [subjectPool[j], subjectPool[i]];
-            }
-            
-            let index = 0;
-            days.forEach(day => {
-                slots.forEach(slot => {
-                    newSchedule[`${day}-${slot}`] = subjectPool[index++] || '';
-                });
-            });
-            
-            return newSchedule;
-        }
+      // Praises / Remarks
+      html+='<td style="min-width:95px;">';
+      praises.forEach(([pid,p])=>{
+        const gd=JSON.stringify(p).replace(/"/g,'&quot;');
+        html+=`<div class="praise-item" onclick="openModal('${sid}','${pid}','${escQ(student.name)}','${escQ(subj.name)}',${gd})">${p.reason||'—'}</div>`;
+      });
+      remarks.forEach(([rid,r])=>{
+        const gd=JSON.stringify(r).replace(/"/g,'&quot;');
+        html+=`<div class="remark-item" onclick="openModal('${sid}','${rid}','${escQ(student.name)}','${escQ(subj.name)}',${gd})">забележка${r.reason?': '+r.reason:''}</div>`;
+      });
+      html+='</td>';
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  c.innerHTML=html;
+}
 
-        function renderSchedule() {
-            if (Object.keys(schedule).length === 0) {
-                document.getElementById('scheduleContainer').innerHTML = '';
-                return;
-            }
-            
-            const days = ['Понеделник', 'Вторник', 'Сряда'];
-            const slots = [1, 2, 3, 4, 5, 6];
-            
-            let html = '<table class="schedule-table"><tr><th>Час</th>';
-            days.forEach(day => {
-                html += `<th>${day}</th>`;
-            });
-            html += '</tr>';
-            
-            slots.forEach(slot => {
-                html += `<tr><td><strong>${slot}</strong></td>`;
-                days.forEach(day => {
-                    html += `<td>${schedule[`${day}-${slot}`] || ''}</td>`;
-                });
-                html += '</tr>';
-            });
-            
-            html += '</table>';
-            document.getElementById('scheduleContainer').innerHTML = html;
-        }
+// ─── STATS ───────────────────────────────────────────────────────────────────
+function renderStats(){
+  const c=document.getElementById('statsContainer');
+  const subArr=Object.entries(subjects),stuArr=Object.entries(students);
+  if(!stuArr.length||!subArr.length){c.innerHTML='<div class="info-msg">Няма данни.</div>';return;}
 
-        // Grades
-        document.getElementById('gradeType').addEventListener('change', (e) => {
-            const valueGroup = document.getElementById('gradeValueGroup');
-            if (e.target.value === 'grade') {
-                valueGroup.style.display = 'block';
-            } else {
-                valueGroup.style.display = 'none';
-            }
-        });
+  let allGrades=[],totalPraise=0,totalRemark=0;
+  const subGrades={};subArr.forEach(([sid])=>subGrades[sid]=[]);
 
-        document.getElementById('saveGradeBtn').addEventListener('click', async () => {
-            const studentId = document.getElementById('gradeStudent').value;
-            const subjectId = document.getElementById('gradeSubject').value;
-            const type = document.getElementById('gradeType').value;
-            const value = document.getElementById('gradeValue').value;
-            const reason = document.getElementById('gradeReason').value.trim();
-            
-            if (!studentId || !subjectId || !currentUser) {
-                showMessage('gradeMessage', 'Моля изберете ученик и предмет!', 'error');
-                return;
-            }
-            
-            if (type === 'grade' && (!value || value < 2 || value > 6)) {
-                showMessage('gradeMessage', 'Невалидна оценка!', 'error');
-                return;
-            }
-            
-            const gradeData = {
-                type,
-                subjectId,
-                reason,
-                timestamp: Date.now()
-            };
-            
-            if (type === 'grade') {
-                gradeData.value = parseFloat(value);
-            }
-            
-            const gradeRef = push(ref(db, `users/${currentUser.uid}/grades/${studentId}`));
-            await set(gradeRef, gradeData);
-            
-            document.getElementById('gradeValue').value = '';
-            document.getElementById('gradeReason').value = '';
-            showMessage('gradeMessage', 'Записът е запазен успешно!', 'success');
-        });
+  stuArr.forEach(([sid])=>{
+    const sg=grades[sid]||{};
+    Object.values(sg).forEach(g=>{
+      if(g.type==='grade'){allGrades.push(g.value);if(subGrades[g.subjectId])subGrades[g.subjectId].push(g.value);}
+      if(g.type==='praise') totalPraise++;
+      if(g.type==='remark') totalRemark++;
+    });
+  });
 
-        function updateGradeSelects() {
-            const studentSelect = document.getElementById('gradeStudent');
-            const subjectSelect = document.getElementById('gradeSubject');
-            
-            studentSelect.innerHTML = '<option value="">Избери ученик...</option>';
-            Object.entries(students).forEach(([id, student]) => {
-                studentSelect.innerHTML += `<option value="${id}">${student.name}</option>`;
-            });
-            
-            subjectSelect.innerHTML = '<option value="">Избери предмет...</option>';
-            Object.entries(subjects).forEach(([id, subject]) => {
-                subjectSelect.innerHTML += `<option value="${id}">${subject.name}</option>`;
-            });
-        }
+  const classAvg=allGrades.length?allGrades.reduce((a,b)=>a+b,0)/allGrades.length:0;
+  const below3=allGrades.filter(g=>g<3).length;
+  const above5=allGrades.filter(g=>g>=5.5).length;
+  const total=allGrades.length;
+  const dist={2:0,3:0,4:0,5:0,6:0};
+  allGrades.forEach(g=>{const k=Math.min(6,Math.max(2,Math.round(g)));dist[k]=(dist[k]||0)+1;});
 
-        // Diary
-        function renderDiary() {
-            const container = document.getElementById('diaryContainer');
-            
-            if (Object.keys(students).length === 0 || Object.keys(subjects).length === 0) {
-                container.innerHTML = '<div class="info-message">Добавете ученици и предмети, за да видите дневника.</div>';
-                return;
-            }
-            
-            let html = '<table class="diary-table"><thead><tr><th>Ученик</th>';
-            
-            Object.entries(subjects).forEach(([id, subject]) => {
-                html += `<th colspan="3">${subject.name}</th>`;
-            });
-            html += '</tr><tr><th></th>';
-            
-            Object.keys(subjects).forEach(() => {
-                html += '<th>Оценки</th><th>Похвали</th><th>Забележки</th>';
-            });
-            html += '</tr></thead><tbody>';
-            
-            Object.entries(students).forEach(([studentId, student]) => {
-                html += `<tr><td><strong>${student.name}</strong></td>`;
-                
-                Object.entries(subjects).forEach(([subjectId, subject]) => {
-                    const studentGrades = grades[studentId] || {};
-                    const subjectGrades = Object.entries(studentGrades).filter(([_, g]) => g.subjectId === subjectId);
-                    
-                    const gradesList = subjectGrades.filter(([_, g]) => g.type === 'grade');
-                    const praisesList = subjectGrades.filter(([_, g]) => g.type === 'praise');
-                    const remarksList = subjectGrades.filter(([_, g]) => g.type === 'remark');
-                    
-                    // Оценки
-                    html += '<td>';
-                    gradesList.forEach(([gradeId, grade]) => {
-                        const gradeBg = gradeColor(grade.value);
-                        html += `<div class="grade-item" style="background: ${gradeBg}" onclick="openModal('${studentId}', '${gradeId}', '${student.name}', '${subject.name}', ${JSON.stringify(grade).replace(/"/g, '&quot;')})" title="${grade.reason}">${grade.value.toFixed(2)}</div>`;
-                    });
-                    if (gradesList.length > 0) {
-                        const avg = gradesList.reduce((sum, [_, g]) => sum + g.value, 0) / gradesList.length;
-                        html += `<div class="average">Ср: ${avg.toFixed(2)}</div>`;
-                    }
-                    html += '</td>';
-                    
-                    // Похвали
-                    html += '<td>';
-                    praisesList.forEach(([praiseId, praise]) => {
-                        html += `<div class="praise-item" onclick="openModal('${studentId}', '${praiseId}', '${student.name}', '${subject.name}', ${JSON.stringify(praise).replace(/"/g, '&quot;')})">
-                            <span class="icon">⭐</span>
-                            <span class="text">${praise.reason || 'Похвала'}</span>
-                        </div>`;
-                    });
-                    html += '</td>';
-                    
-                    // Забележки
-                    html += '<td>';
-                    remarksList.forEach(([remarkId, remark]) => {
-                        html += `<div class="remark-item" onclick="openModal('${studentId}', '${remarkId}', '${student.name}', '${subject.name}', ${JSON.stringify(remark).replace(/"/g, '&quot;')})">
-                            <span class="icon">⚠️</span>
-                            <span class="text">${remark.reason || 'Забележка'}</span>
-                        </div>`;
-                    });
-                    html += '</td>';
-                });
-                
-                html += '</tr>';
-            });
-            
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
+  // Students with semester grades average
+  const semGradeAvgs=stuArr.map(([sid,s])=>{
+    const sg=grades[sid]||{};
+    const vals=subArr.map(([subId])=>sg[`semgrade_${subId}`]?.value).filter(v=>v!=null);
+    return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+  }).filter(v=>v!==null);
+  const semClassAvg=semGradeAvgs.length?semGradeAvgs.reduce((a,b)=>a+b,0)/semGradeAvgs.length:null;
 
-        // Load data
-        function loadData() {
-            if (!currentUser) return;
-            
-            onValue(ref(db, `users/${currentUser.uid}/students`), (snapshot) => {
-                students = snapshot.val() || {};
-                renderStudents();
-            });
-            
-            onValue(ref(db, `users/${currentUser.uid}/subjects`), (snapshot) => {
-                subjects = snapshot.val() || {};
-                renderSubjects();
-            });
-            
-            onValue(ref(db, `users/${currentUser.uid}/schedule`), (snapshot) => {
-                schedule = snapshot.val() || {};
-                renderSchedule();
-            });
-            
-            onValue(ref(db, `users/${currentUser.uid}/grades`), (snapshot) => {
-                grades = snapshot.val() || {};
-                renderDiary();
-            });
-        }
+  let html=`<div class="stats-grid">
+    <div class="stat-card"><div class="val">${classAvg.toFixed(2)}</div><div class="lbl">Средна (текущ срок)</div></div>
+    ${semClassAvg?`<div class="stat-card" style="background:linear-gradient(135deg,#5c6bc0,#3949ab)"><div class="val">${semClassAvg.toFixed(2)}</div><div class="lbl">Средна срочни оценки</div></div>`:''}
+    <div class="stat-card"><div class="val">${total}</div><div class="lbl">Оценки общо</div></div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#2ecc71,#1a9e4e)"><div class="val">${above5}</div><div class="lbl">Отлични (5.50+)</div></div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#e74c3c,#c0392b)"><div class="val">${below3}</div><div class="lbl">Слаби (под 3)</div></div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#27ae60,#1e8449)"><div class="val">${totalPraise}</div><div class="lbl">Похвали</div></div>
+    <div class="stat-card" style="background:linear-gradient(135deg,#e67e22,#d35400)"><div class="val">${totalRemark}</div><div class="lbl">Забележки</div></div>
+  </div>`;
 
-        function showMessage(elementId, message, type) {
-            const el = document.getElementById(elementId);
-            el.className = type === 'success' ? 'success-message' : 'error-message';
-            el.textContent = message;
-            setTimeout(() => {
-                el.textContent = '';
-                el.className = '';
-            }, 3000);
-        }
-    </script>
+  // Per-subject
+  html+='<div class="section-title">Средни по предмети</div><div class="stats-grid">';
+  subArr.forEach(([sid,s])=>{
+    const gs=subGrades[sid]||[];
+    const avg=gs.length?gs.reduce((a,b)=>a+b,0)/gs.length:null;
+    const bg=avg?gradeColor(avg):'linear-gradient(135deg,#bbb,#999)';
+    html+=`<div class="stat-card" style="background:${bg}"><div class="val">${avg?avg.toFixed(2):'—'}</div><div class="lbl">${s.name}<br><span style="font-size:10px;opacity:.8;">${gs.length} оценки</span></div></div>`;
+  });
+  html+='</div>';
+
+  // Ranking
+  const ranking=stuArr.map(([sid,s])=>{
+    const sg=grades[sid]||{};
+    const gs=Object.values(sg).filter(g=>g.type==='grade').map(g=>g.value);
+    const avg=gs.length?gs.reduce((a,b)=>a+b,0)/gs.length:null;
+    const semVals=subArr.map(([subId])=>sg[`semgrade_${subId}`]?.value).filter(v=>v!=null);
+    const semAvg=semVals.length?semVals.reduce((a,b)=>a+b,0)/semVals.length:null;
+    return{name:s.name,avg,semAvg,count:gs.length};
+  }).filter(x=>x.count>0||x.semAvg).sort((a,b)=>(b.avg||0)-(a.avg||0));
+
+  if(ranking.length){
+    html+='<div class="section-title">Класация</div>';
+    html+='<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+    html+='<tr style="background:#667eea;color:white;"><th style="padding:9px 12px;text-align:left;">Ученик</th><th style="padding:9px;">Средна</th><th style="padding:9px;">Срочна</th><th style="padding:9px;">Брой оц.</th></tr>';
+    ranking.forEach((s,i)=>{
+      const bg=i%2===0?'#f8f9fb':'white';
+      const ab=s.avg?`<span style="background:${gradeColor(s.avg)};color:white;padding:2px 9px;border-radius:5px;font-weight:700;">${s.avg.toFixed(2)}</span>`:'—';
+      const sb=s.semAvg?`<span style="background:${gradeColor(s.semAvg)};color:white;padding:2px 9px;border-radius:5px;font-weight:700;">${s.semAvg.toFixed(2)}</span>`:'—';
+      html+=`<tr style="background:${bg};"><td style="padding:8px 12px;font-weight:600;">${i+1}. ${s.name}</td><td style="padding:8px;text-align:center;">${ab}</td><td style="padding:8px;text-align:center;">${sb}</td><td style="padding:8px;text-align:center;color:#aaa;">${s.count}</td></tr>`;
+    });
+    html+='</table>';
+  }
+
+  // Distribution
+  if(total>0){
+    html+='<div class="section-title">Разпределение</div>';
+    html+='<div style="display:flex;gap:8px;align-items:flex-end;height:90px;margin-bottom:8px;">';
+    const colors={2:'#e74c3c',3:'#e67e22',4:'#e8c84a',5:'#3498db',6:'#2ecc71'};
+    [2,3,4,5,6].forEach(k=>{
+      const cnt=dist[k]||0;
+      const pct=Math.round(cnt/total*100);
+      const h=Math.max(4,Math.round(pct*.8));
+      html+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <span style="font-size:11px;color:#888;">${cnt}</span>
+        <div style="width:100%;height:${h}px;background:${colors[k]};border-radius:4px 4px 0 0;"></div>
+        <span style="font-size:12px;font-weight:700;color:${colors[k]};">${k}</span>
+      </div>`;
+    });
+    html+='</div>';
+  }
+
+  c.innerHTML=html;
+}
+
+// ─── ARCHIVE ──────────────────────────────────────────────────────────────────
+async function renderArchive(){
+  const c=document.getElementById('archiveContainer');
+  c.innerHTML='<div class="info-msg">Зарежда...</div>';
+  const snap=await get(ref(db,`users/${currentUser.uid}/archive`));
+  const data=snap.val()||{};
+  if(!Object.keys(data).length){c.innerHTML='<div class="info-msg">Все още няма архивирани срокове.</div>';return;}
+  let html='';
+  Object.entries(data).sort((a,b)=>b[1].archivedAt-a[1].archivedAt).forEach(([key,arc])=>{
+    const date=new Date(arc.archivedAt).toLocaleDateString('bg-BG');
+    const sc=Object.keys(arc.students||{}).length;
+    const subc=Object.keys(arc.subjects||{}).length;
+    html+=`<div class="archive-item">
+      <h3>${arc.label||key}</h3>
+      <div class="archive-meta">Архивиран на ${date} &bull; ${sc} ученика &bull; ${subc} предмета</div>
+      <button class="btn btn-small btn-ghost" onclick="toggleArcDetail('${key}')">Преглед</button>
+      <div id="arcD_${key}" style="display:none;margin-top:14px;">${buildArcTable(arc)}</div>
+    </div>`;
+  });
+  c.innerHTML=html;
+}
+
+function buildArcTable(arc){
+  const sts=arc.students||{},subs=arc.subjects||{},grs=arc.grades||{};
+  const subArr=Object.entries(subs);
+  if(!subArr.length) return '<em style="color:#aaa;font-size:13px;">Няма данни.</em>';
+  let html='<div style="overflow-x:auto;"><table class="diary-table"><thead><tr><th>Ученик</th>';
+  subArr.forEach(([,s])=>html+=`<th colspan="2" class="sub-header">${s.name}</th>`);
+  html+='</tr><tr><th></th>';
+  subArr.forEach(()=>html+='<th>Оценки</th><th>Срочна</th>');
+  html+='</tr></thead><tbody>';
+  Object.entries(sts).forEach(([sid,st])=>{
+    const sg=grs[sid]||{};
+    html+=`<tr><td class="sname">${st.name}</td>`;
+    subArr.forEach(([subId])=>{
+      const gs=Object.entries(sg).filter(([,g])=>g.subjectId===subId&&g.type==='grade');
+      const sem=sg[`semgrade_${subId}`];
+      html+='<td>';
+      gs.forEach(([,g])=>html+=`<span class="grade-item" style="background:${gradeColor(g.value)}">${g.value.toFixed(2)}</span>`);
+      if(gs.length){const avg=gs.reduce((s,[,g])=>s+g.value,0)/gs.length;html+=`<div class="grade-avg">Ср:${avg.toFixed(2)}</div>`;}
+      html+='</td>';
+      html+=`<td>${sem?`<span class="sem-badge" style="background:${gradeColor(sem.value)}">${Math.round(sem.value)}</span>`:'—'}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+window.toggleArcDetail=(key)=>{const el=document.getElementById(`arcD_${key}`);el.style.display=el.style.display==='none'?'block':'none';};
+
+// ─── SEMESTER MANAGEMENT ─────────────────────────────────────────────────────
+document.getElementById('semesterBadge').addEventListener('click',()=>{
+  document.getElementById('renameSemInput').value=currentSemesterName;
+  document.getElementById('renameSemModal').classList.add('active');
+});
+document.getElementById('cancelRenameSem').addEventListener('click',()=>document.getElementById('renameSemModal').classList.remove('active'));
+document.getElementById('confirmRenameSem').addEventListener('click',async()=>{
+  const n=document.getElementById('renameSemInput').value.trim();
+  if(!n) return;
+  await set(ref(db,`users/${currentUser.uid}/currentSemesterName`),n);
+  await set(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/semesterName`),n);
+  document.getElementById('renameSemModal').classList.remove('active');
+});
+
+document.getElementById('endSemesterBtn').addEventListener('click',()=>{
+  document.getElementById('newSemesterName').value='';
+  document.getElementById('endSemesterModal').classList.add('active');
+});
+document.getElementById('cancelEndSemester').addEventListener('click',()=>document.getElementById('endSemesterModal').classList.remove('active'));
+document.getElementById('confirmEndSemester').addEventListener('click',async()=>{
+  const n=document.getElementById('newSemesterName').value.trim()||'Нов срок';
+  document.getElementById('endSemesterModal').classList.remove('active');
+  await doEndSemester(n);
+});
+
+async function doEndSemester(newName){
+  // Archive
+  await set(ref(db,`users/${currentUser.uid}/archive/${currentSemesterKey}`),{
+    label:currentSemesterName,archivedAt:Date.now(),students,subjects,schedule,grades
+  });
+  // New key
+  const parts=currentSemesterKey.split('_');
+  const num=parseInt(parts[1]||'1')+1;
+  const newKey=`semester_${num}`;
+  // Carry prev-sem grades (from current semester_grades)
+  const prevData={};
+  Object.entries(students).forEach(([sid])=>{
+    const sg=grades[sid]||{};
+    Object.entries(subjects).forEach(([subId])=>{
+      const sem=sg[`semgrade_${subId}`];
+      if(sem){
+        if(!prevData[sid]) prevData[sid]={};
+        prevData[sid][`prevsem_${subId}`]={...sem,type:'prev_semester',fromSemester:currentSemesterName};
+      }
+    });
+  });
+  // Write new semester
+  await set(ref(db,`users/${currentUser.uid}/currentSemesterKey`),newKey);
+  await set(ref(db,`users/${currentUser.uid}/currentSemesterName`),newName);
+  await set(ref(db,`users/${currentUser.uid}/${newKey}/students`),students);
+  await set(ref(db,`users/${currentUser.uid}/${newKey}/subjects`),subjects);
+  await set(ref(db,`users/${currentUser.uid}/${newKey}/semesterName`),newName);
+  if(Object.keys(prevData).length) await set(ref(db,`users/${currentUser.uid}/${newKey}/grades`),prevData);
+  currentSemesterKey=newKey;currentSemesterName=newName;
+  document.getElementById('semesterBadge').textContent=newName;
+  loadData();
+  toast(`Архивирано. Добре дошли в "${newName}"!`);
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+let modalCtx=null;
+window.openModal=(sid,gid,studentName,subjectName,gradeData)=>{
+  modalCtx={sid,gid,gradeData};
+  const typeMap={grade:'Оценка',semester_grade:'Срочна оценка',praise:'Похвала',remark:'Забележка',prev_semester:'Срочна оценка (предходен срок)'};
+  document.getElementById('modalTitle').textContent=`${studentName} — ${subjectName}`;
+  const isPrev=gradeData.type==='prev_semester';
+  let html=`<div class="modal-field"><label>Тип</label><div class="val">${typeMap[gradeData.type]||gradeData.type}</div></div>`;
+  if(['grade','semester_grade','prev_semester'].includes(gradeData.type)&&gradeData.value!=null){
+    const displayVal=['semester_grade','prev_semester'].includes(gradeData.type)
+      ? Math.round(gradeData.value)
+      : gradeData.value.toFixed(2);
+    html+=`<div class="modal-field"><label>Оценка</label><div class="val"><span class="modal-grade-badge" style="background:${gradeColor(gradeData.value)}">${displayVal}</span></div></div>`;
+  }
+  if(gradeData.reason) html+=`<div class="modal-field"><label>Описание</label><div class="val">${gradeData.reason}</div></div>`;
+  if(gradeData.fromSemester) html+=`<div class="modal-field"><label>От срок</label><div class="val">${gradeData.fromSemester}</div></div>`;
+  html+=`<div class="modal-field"><label>Дата</label><div class="val">${new Date(gradeData.timestamp).toLocaleString('bg-BG')}</div></div>`;
+  if(!isPrev){
+    html+=`<hr>`;
+    if(['grade','semester_grade'].includes(gradeData.type)){
+      html+=`<div class="modal-field"><label>Промяна на стойност</label><div class="edit-row"><input type="number" id="editGradeVal" min="2" max="6" step="0.01" value="${gradeData.value||''}"><button class="btn btn-small" onclick="saveEditVal()">Запази</button></div></div>`;
+    }
+    html+=`<div class="modal-field"><label>Промяна на описание</label><div class="edit-row"><input type="text" id="editGradeReason" value="${gradeData.reason||''}"><button class="btn btn-small" onclick="saveEditReason()">Запази</button></div></div>`;
+  }
+  document.getElementById('modalContent').innerHTML=html;
+  const acts=document.getElementById('modalActions');
+  if(!isPrev){
+    acts.innerHTML=`<button class="btn btn-danger" onclick="deleteEntry()">Изтрий</button><button class="btn btn-ghost" onclick="closeModal()">Затвори</button>`;
+  } else {
+    acts.innerHTML=`<button class="btn btn-ghost" onclick="closeModal()">Затвори</button>`;
+  }
+  document.getElementById('modalOverlay').classList.add('active');
+};
+window.saveEditVal=async()=>{
+  const v=parseFloat(document.getElementById('editGradeVal').value);
+  if(!v||v<2||v>6){alert('Невалидна оценка.');return;}
+  await update(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/grades/${modalCtx.sid}/${modalCtx.gid}`),{value:parseFloat(v.toFixed(2))});
+  closeModal();
+};
+window.saveEditReason=async()=>{
+  const r=document.getElementById('editGradeReason').value.trim();
+  await update(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/grades/${modalCtx.sid}/${modalCtx.gid}`),{reason:r});
+  closeModal();
+};
+window.deleteEntry=async()=>{
+  if(!confirm('Изтриване?')) return;
+  await remove(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/grades/${modalCtx.sid}/${modalCtx.gid}`));
+  closeModal();
+};
+window.closeModal=()=>{document.getElementById('modalOverlay').classList.remove('active');modalCtx=null;};
+document.getElementById('modalClose').addEventListener('click',closeModal);
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target.id==='modalOverlay')closeModal();});
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+document.getElementById('loginBtn').addEventListener('click',async()=>{
+  try{await signInWithEmailAndPassword(auth,document.getElementById('authEmail').value,document.getElementById('authPassword').value);}
+  catch(e){showMsg('authMessage','Грешка: '+e.message,'error');}
+});
+document.getElementById('registerBtn').addEventListener('click',async()=>{
+  try{await createUserWithEmailAndPassword(auth,document.getElementById('authEmail').value,document.getElementById('authPassword').value);showMsg('authMessage','Регистрацията е успешна!','success');}
+  catch(e){showMsg('authMessage','Грешка: '+e.message,'error');}
+});
+document.getElementById('logoutBtn').addEventListener('click',()=>signOut(auth));
+
+onAuthStateChanged(auth,async user=>{
+  if(user){
+    currentUser=user;
+    document.getElementById('userEmail').textContent=user.email;
+    ['logoutBtn','endSemesterBtn'].forEach(id=>document.getElementById(id).style.display='block');
+    document.getElementById('authCard').classList.remove('active');
+    document.getElementById('mainMenu').classList.add('active');
+    document.getElementById('studentsCard').classList.add('active');
+    const kSnap=await get(ref(db,`users/${currentUser.uid}/currentSemesterKey`));
+    const nSnap=await get(ref(db,`users/${currentUser.uid}/currentSemesterName`));
+    currentSemesterKey=kSnap.val()||'semester_1';
+    currentSemesterName=nSnap.val()||'1-ви срок';
+    document.getElementById('semesterBadge').textContent=currentSemesterName;
+    loadData();
+  } else {
+    currentUser=null;
+    document.getElementById('userEmail').textContent='';
+    ['logoutBtn','endSemesterBtn'].forEach(id=>document.getElementById(id).style.display='none');
+    document.getElementById('semesterBadge').textContent='';
+    document.getElementById('authCard').classList.add('active');
+    document.getElementById('mainMenu').classList.remove('active');
+    ['studentsCard','subjectsCard','gradesCard','diaryCard','statsCard','archiveCard'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  }
+});
+
+// ─── MENU ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.menu-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const sec=btn.dataset.section;
+    ['studentsCard','subjectsCard','gradesCard','diaryCard','statsCard','archiveCard'].forEach(id=>document.getElementById(id).classList.remove('active'));
+    document.getElementById(sec+'Card').classList.add('active');
+    if(sec==='diary') renderDiary();
+    if(sec==='stats') renderStats();
+    if(sec==='archive') renderArchive();
+  });
+});
+
+// ─── LOAD DATA ────────────────────────────────────────────────────────────────
+function loadData(){
+  if(!currentUser) return;
+  const base=`users/${currentUser.uid}/${currentSemesterKey}`;
+  onValue(ref(db,`${base}/students`),snap=>{students=snap.val()||{};renderStudents();});
+  onValue(ref(db,`${base}/subjects`),snap=>{subjects=snap.val()||{};renderSubjects();});
+  onValue(ref(db,`${base}/schedule`),snap=>{schedule=snap.val()||{};renderSchedule();});
+  onValue(ref(db,`${base}/semesterName`),snap=>{if(snap.val()){currentSemesterName=snap.val();document.getElementById('semesterBadge').textContent=currentSemesterName;}});
+  onValue(ref(db,`${base}/grades`),snap=>{
+    grades=snap.val()||{};
+    const a=document.querySelector('.menu-btn.active');
+    if(a){if(a.dataset.section==='diary')renderDiary();if(a.dataset.section==='stats')renderStats();}
+  });
+}
+</script>
 </body>
 </html>
+
