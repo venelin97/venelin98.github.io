@@ -45,17 +45,38 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-g
 .schedule-table tr:hover td{background:#f0f2ff;}
 .diary-wrapper{overflow-x:auto;margin-top:10px;}
 .diary-table{width:100%;border-collapse:collapse;}
-.diary-table th,.diary-table td{border:1px solid #e0e0e8;padding:7px 9px;text-align:center;min-width:75px;font-size:13px;}
-.diary-table th{background:#667eea;color:white;font-weight:600;position:sticky;top:0;z-index:2;}
-.diary-table th.sub-header{background:#7986cb;}
+.diary-table th,.diary-table td{border:1px solid #e4e4ef;padding:7px 9px;text-align:center;font-size:12px;}
+.diary-table thead th{background:#667eea;color:white;font-weight:600;position:sticky;top:0;z-index:2;white-space:nowrap;}
 .diary-table td{background:white;vertical-align:top;}
-.diary-table td.sname{text-align:left;font-weight:600;background:#f4f4f8;min-width:160px;position:sticky;left:0;z-index:1;color:#333;}
-.diary-table tbody tr:hover td{background:#fafafe;}
-.diary-table tbody tr:hover td.sname{background:#ebebf5;}
-.grade-item{padding:4px 8px;margin:2px;border-radius:5px;cursor:pointer;display:inline-block;color:white;font-weight:700;font-size:12px;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.18);}
+/* Student name cell */
+.dt-student-th{min-width:170px;background:#5c6bc0 !important;text-align:left !important;font-size:13px !important;}
+.sname{text-align:left !important;font-weight:600;background:#f2f2f8 !important;min-width:170px;position:sticky;left:0;z-index:1;color:#333;border-right:2px solid #c5ceff !important;}
+/* Subject group header */
+.dt-subject-th{background:#7986cb !important;font-size:13px !important;letter-spacing:.2px;}
+/* Sub-column headers */
+.dt-col-prev{background:#9fa8da !important;font-size:11px !important;line-height:1.3;min-width:62px;}
+.dt-col-grades{background:#667eea !important;font-size:11px !important;min-width:100px;}
+.dt-col-sem{background:#5c6bc0 !important;font-size:11px !important;line-height:1.3;min-width:62px;}
+.dt-col-notes{background:#7986cb !important;font-size:11px !important;min-width:105px;}
+/* Data cells */
+.dt-cell-prev{background:#f7f7fd !important;min-width:62px;border-right:1px solid #d0d5f5 !important;}
+.dt-cell-grades{min-width:100px;}
+.dt-cell-sem{min-width:62px;border-right:1px solid #d0d5f5 !important;}
+.dt-cell-notes{min-width:105px;border-right:2px solid #c5ceff !important;}
+/* Alternating rows */
+.diary-table tbody tr:hover td{filter:brightness(.97);}
+/* Empty placeholder */
+.dt-empty{color:#ccc;font-size:11px;}
+/* Legend */
+.diary-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:#888;align-items:center;}
+.leg-item{display:flex;align-items:center;gap:5px;}
+.leg-dot{display:inline-block;width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.grade-item{padding:4px 8px;margin:2px;border-radius:6px;cursor:pointer;display:inline-block;color:white;font-weight:700;font-size:12px;transition:transform .15s,box-shadow .15s;box-shadow:0 2px 5px rgba(0,0,0,.22);}
 .grade-item:hover{transform:translateY(-2px);box-shadow:0 3px 7px rgba(0,0,0,.25);}
-.sem-badge{padding:4px 9px;border-radius:5px;display:inline-block;font-weight:700;font-size:12px;color:white;box-shadow:0 1px 3px rgba(0,0,0,.18);cursor:pointer;}
-.sem-badge:hover{transform:translateY(-1px);}
+.sem-badge{padding:5px 10px;border-radius:6px;display:inline-block;font-weight:700;font-size:13px;color:white;box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;transition:transform .15s;}
+.sem-badge:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.25);}
+.sem-prev{opacity:.82;font-size:12px;}
+.sem-cur{font-size:14px;}
 .praise-item,.remark-item{padding:4px 8px;margin:2px 0;border-radius:5px;cursor:pointer;display:block;font-size:12px;transition:transform .15s;}
 .praise-item{background:#edfaf3;color:#1a7a40;border-left:3px solid #27ae60;}
 .remark-item{background:#fdf0f0;color:#a93226;border-left:3px solid #e74c3c;}
@@ -110,10 +131,13 @@ hr{border:none;border-top:1px solid #f0f0f5;margin:16px 0;}
 <div class="toast" id="toast"></div>
 
 <div class="header">
-  <h1>Електронен Дневник</h1>
+  <div>
+    <h1>📒 Електронен Дневник</h1>
+    <div style="font-size:12px;color:#aaa;margin-top:3px;">Учителски дневник — управление на оценки</div>
+  </div>
   <div class="header-right">
     <span class="semester-badge" id="semesterBadge" title="Кликни за преименуване"></span>
-    <span id="userEmail" style="font-size:13px;color:#aaa;"></span>
+    <span id="userEmail" style="font-size:12px;color:#aaa;"></span>
     <button class="btn btn-small btn-warning" id="endSemesterBtn" style="display:none;">Приключи срок</button>
     <button class="btn btn-small btn-danger" id="logoutBtn" style="display:none;">Изход</button>
   </div>
@@ -144,7 +168,7 @@ hr{border:none;border-top:1px solid #f0f0f5;margin:16px 0;}
 <div class="card" id="studentsCard">
   <h2>Ученици</h2>
   <div style="display:flex;gap:10px;align-items:flex-end;">
-    <div class="form-group" style="flex:1;margin-bottom:0;"><label>Ime на ученик</label><input type="text" id="studentName" placeholder="Иван Иванов"></div>
+    <div class="form-group" style="flex:1;margin-bottom:0;"><label>Име на ученик</label><input type="text" id="studentName" placeholder="Иван Иванов"></div>
     <button class="btn" id="addStudentBtn" style="margin-bottom:0;">Добави</button>
   </div>
   <div class="list" id="studentsList"></div>
@@ -190,10 +214,15 @@ hr{border:none;border-top:1px solid #f0f0f5;margin:16px 0;}
       <div class="form-group"><label>Тип</label>
         <select id="gradeType">
           <option value="grade">Оценка</option>
-          <option value="semester_grade">Срочна оценка</option>
+          <option value="semester_grade">Срочна оценка — текущ срок</option>
+          <option value="prev_semester_grade">Срочна оценка — минал срок</option>
           <option value="praise">Похвала</option>
           <option value="remark">Забележка</option>
         </select>
+      </div>
+      <div class="form-group" id="prevSemNameGroup" style="display:none;">
+        <label>Как се казваше миналият срок?</label>
+        <input type="text" id="prevSemNameInput" placeholder="1-ви срок">
       </div>
       <div class="form-group" id="gradeValueGroup">
         <label>Стойност (2–6)</label>
@@ -209,7 +238,8 @@ hr{border:none;border-top:1px solid #f0f0f5;margin:16px 0;}
     <div>
       <div class="info-msg" style="margin-top:0;">
         <strong>Оценка</strong> — текуща оценка от час.<br><br>
-        <strong>Срочна оценка</strong> — крайната оценка за срока по даден предмет; показва се в отделна колона в дневника и се пренася при архивиране.<br><br>
+        <strong>Срочна — текущ срок</strong> — крайната оценка за текущия срок; показва се в дневника и се пренася при архивиране.<br><br>
+        <strong>Срочна — минал срок</strong> — въведи срочната оценка от предходния срок; показва се в отделна колона вляво в дневника.<br><br>
         <strong>Похвала / Забележка</strong> — поведение, видимо в дневника.
       </div>
     </div>
@@ -300,6 +330,13 @@ let currentSemesterKey='semester_1',currentSemesterName='1-ви срок';
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────
 function gradeColor(v){
+  if(v>=5.5) return '#27ae60';
+  if(v>=4.5) return '#2980b9';
+  if(v>=3.5) return '#d4a017';
+  if(v>=2.5) return '#d35400';
+  return '#c0392b';
+}
+function gradeGradient(v){
   if(v>=5.5) return 'linear-gradient(135deg,#2ecc71,#27ae60)';
   if(v>=4.5) return 'linear-gradient(135deg,#3498db,#2980b9)';
   if(v>=3.5) return 'linear-gradient(135deg,#e8c84a,#d4a017)';
@@ -500,8 +537,16 @@ document.getElementById('generateScheduleBtn').addEventListener('click',async()=
 
 // ─── GRADES INPUT ─────────────────────────────────────────────────────────────
 document.getElementById('gradeType').addEventListener('change',e=>{
-  document.getElementById('gradeValueGroup').style.display=
-    ['grade','semester_grade'].includes(e.target.value)?'block':'none';
+  const v=e.target.value;
+  const needsValue=['grade','semester_grade','prev_semester_grade'].includes(v);
+  const isSem=['semester_grade','prev_semester_grade'].includes(v);
+  document.getElementById('gradeValueGroup').style.display=needsValue?'block':'none';
+  document.getElementById('prevSemNameGroup').style.display=v==='prev_semester_grade'?'block':'none';
+  const inp=document.getElementById('gradeValue');
+  inp.step=isSem?'1':'0.01';
+  inp.placeholder=isSem?'5':'5.50';
+  document.querySelector('label[for="gradeValue"],#gradeValueGroup label').textContent=
+    isSem?'Срочна оценка (2–6, цяло число)':'Оценка (2–6)';
 });
 
 document.getElementById('saveGradeBtn').addEventListener('click',async()=>{
@@ -511,11 +556,19 @@ document.getElementById('saveGradeBtn').addEventListener('click',async()=>{
   const value=document.getElementById('gradeValue').value;
   const reason=document.getElementById('gradeReason').value.trim();
   if(!studentId||!subjectId){showMsg('gradeMessage','Избери ученик и предмет!','error');return;}
-  if(['grade','semester_grade'].includes(type)&&(!value||+value<2||+value>6)){showMsg('gradeMessage','Невалидна оценка (2–6)!','error');return;}
+  if(['grade','semester_grade','prev_semester_grade'].includes(type)&&(!value||+value<2||+value>6)){showMsg('gradeMessage','Невалидна оценка (2–6)!','error');return;}
   const data={type,subjectId,reason,timestamp:Date.now()};
-  if(['grade','semester_grade'].includes(type)) data.value=parseFloat((+value).toFixed(2));
+  if(['grade','semester_grade','prev_semester_grade'].includes(type)){
+    const isSem=['semester_grade','prev_semester_grade'].includes(type);
+    data.value=isSem?Math.round(+value):parseFloat((+value).toFixed(2));
+  }
+
   if(type==='semester_grade'){
     await set(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/grades/${studentId}/semgrade_${subjectId}`),data);
+  } else if(type==='prev_semester_grade'){
+    const prevName=document.getElementById('prevSemNameInput').value.trim()||'Минал срок';
+    const prevData={...data, type:'prev_semester', fromSemester:prevName};
+    await set(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/grades/${studentId}/prevsem_${subjectId}`),prevData);
   } else {
     await push(ref(db,`users/${currentUser.uid}/${currentSemesterKey}/grades/${studentId}`),data);
   }
@@ -541,61 +594,124 @@ function renderDiary(){
   const subArr=Object.entries(subjects),stuArr=Object.entries(students);
   if(!stuArr.length||!subArr.length){c.innerHTML='<div class="info-msg">Добавете ученици и предмети.</div>';return;}
 
+  // Does any student have a prev-semester grade?
+  const hasPrevSem=true; // always show the column
+
+  // Find name of previous semester from any prevE entry
+  let prevSemName='Мин. срок';
+  outer: for(const [sid] of stuArr){
+    for(const [subId] of subArr){
+      const pe=(grades[sid]||{})[`prevsem_${subId}`];
+      if(pe&&pe.fromSemester){prevSemName=pe.fromSemester;break outer;}
+    }
+  }
+
+  // Always 4 columns: prev-sem srochna | grades | current-sem srochna | notes
+  const colsPerSub=4;
+
+  // ── THEAD ──────────────────────────────────────────────────────────────────
   let html='<div class="diary-wrapper"><table class="diary-table"><thead>';
-  html+='<tr><th rowspan="2" style="min-width:160px;">Ученик</th>';
-  subArr.forEach(([,s])=>html+=`<th colspan="3" class="sub-header">${s.name}</th>`);
-  html+='</tr><tr>';
-  subArr.forEach(()=>html+='<th>Оценки</th><th>Срочна</th><th>Бележки</th>');
+
+  // Row 1: student + subject group headers
+  html+=`<tr>
+    <th rowspan="2" class="dt-student-th">Ученик</th>`;
+  subArr.forEach(([,s])=>
+    html+=`<th colspan="${colsPerSub}" class="dt-subject-th">${s.name}</th>`
+  );
+  html+='</tr>';
+
+  // Row 2: sub-column labels
+  html+='<tr>';
+  subArr.forEach(()=>{
+    html+=`<th class="dt-col-prev">${prevSemName}<br><span style="font-weight:400;opacity:.85;">срочна</span></th>`;
+    html+=`<th class="dt-col-grades">Оценки</th>`;
+    html+=`<th class="dt-col-sem">${currentSemesterName}<br><span style="font-weight:400;opacity:.85;">срочна</span></th>`;
+    html+=`<th class="dt-col-notes">Бележки</th>`;
+  });
   html+='</tr></thead><tbody>';
 
-  stuArr.forEach(([sid,student])=>{
+  // ── TBODY ──────────────────────────────────────────────────────────────────
+  stuArr.forEach(([sid,student],ri)=>{
     const sg=grades[sid]||{};
-    html+=`<tr><td class="sname">${student.name}</td>`;
+    const rowBg=ri%2===0?'':'background:#fafafe;';
+    html+=`<tr style="${rowBg}"><td class="sname">${student.name}</td>`;
+
     subArr.forEach(([subId,subj])=>{
-      const entries=Object.entries(sg).filter(([,g])=>g.subjectId===subId);
-      const grs=entries.filter(([,g])=>g.type==='grade');
-      const semE=sg[`semgrade_${subId}`];
-      const prevE=sg[`prevsem_${subId}`];
-      const praises=entries.filter(([,g])=>g.type==='praise');
-      const remarks=entries.filter(([,g])=>g.type==='remark');
+      const allEntries=Object.entries(sg).filter(([,g])=>g.subjectId===subId);
+      const grs       =allEntries.filter(([,g])=>g.type==='grade');
+      const semE      =sg[`semgrade_${subId}`];
+      const prevE     =sg[`prevsem_${subId}`];
+      const praises   =allEntries.filter(([,g])=>g.type==='praise');
+      const remarks   =allEntries.filter(([,g])=>g.type==='remark');
 
-      // Grades
-      html+='<td>';
-      grs.forEach(([gid,g])=>{
-        const gd=JSON.stringify(g).replace(/"/g,'&quot;');
-        html+=`<span class="grade-item" style="background:${gradeColor(g.value)}" onclick="openModal('${sid}','${gid}','${escQ(student.name)}','${escQ(subj.name)}',${gd})">${g.value.toFixed(2)}</span>`;
-      });
-      if(grs.length){const avg=grs.reduce((s,[,g])=>s+g.value,0)/grs.length;html+=`<div class="grade-avg">Ср: ${avg.toFixed(2)}</div>`;}
-      html+='</td>';
-
-      // Semester grade
-      html+='<td style="min-width:75px;">';
-      if(semE){
-        const gd=JSON.stringify(semE).replace(/"/g,'&quot;');
-        html+=`<span class="sem-badge" style="background:${gradeColor(semE.value)}" onclick="openModal('${sid}','semgrade_${subId}','${escQ(student.name)}','${escQ(subj.name)}',${gd})">${Math.round(semE.value)}</span>`;
-      }
+      // ① Previous semester grade
+      html+='<td class="dt-cell-prev">';
       if(prevE){
         const gd=JSON.stringify(prevE).replace(/"/g,'&quot;');
-        html+=`<span class="sem-badge" style="background:${gradeColor(prevE.value)};opacity:.65;font-size:11px;" onclick="openModal('${sid}','prevsem_${subId}','${escQ(student.name)}','${escQ(subj.name)}',${gd})" title="От предходен срок: ${prevE.fromSemester||''}">${Math.round(prevE.value)}</span>`;
+        html+=`<span class="sem-badge sem-prev" style="background:${gradeColor(prevE.value)}"
+          onclick="openModal('${sid}','prevsem_${subId}','${escQ(student.name)}','${escQ(subj.name)}',${gd})"
+          title="${prevSemName}">${Math.round(prevE.value)}</span>`;
+      } else {
+        html+='<span class="dt-empty">—</span>';
       }
-      if(!semE&&!prevE) html+='<span style="color:#ddd;font-size:11px;">—</span>';
       html+='</td>';
 
-      // Praises / Remarks
-      html+='<td style="min-width:95px;">';
+      // ② Current grades
+      html+='<td class="dt-cell-grades">';
+      grs.forEach(([gid,g])=>{
+        const gd=JSON.stringify(g).replace(/"/g,'&quot;');
+        html+=`<span class="grade-item"
+          style="background:${gradeColor(g.value)}"
+          onclick="openModal('${sid}','${gid}','${escQ(student.name)}','${escQ(subj.name)}',${gd})"
+          >${g.value.toFixed(2)}</span>`;
+      });
+      if(grs.length){
+        const avg=grs.reduce((s,[,g])=>s+g.value,0)/grs.length;
+        html+=`<div class="grade-avg">Ср: ${avg.toFixed(2)}</div>`;
+      }
+      html+='</td>';
+
+      // ③ Current semester grade
+      html+='<td class="dt-cell-sem">';
+      if(semE){
+        const gd=JSON.stringify(semE).replace(/"/g,'&quot;');
+        html+=`<span class="sem-badge sem-cur" style="background:${gradeColor(semE.value)}"
+          onclick="openModal('${sid}','semgrade_${subId}','${escQ(student.name)}','${escQ(subj.name)}',${gd})"
+          >${Math.round(semE.value)}</span>`;
+      } else {
+        html+='<span class="dt-empty">—</span>';
+      }
+      html+='</td>';
+
+      // ④ Notes (praises + remarks)
+      html+='<td class="dt-cell-notes">';
       praises.forEach(([pid,p])=>{
         const gd=JSON.stringify(p).replace(/"/g,'&quot;');
-        html+=`<div class="praise-item" onclick="openModal('${sid}','${pid}','${escQ(student.name)}','${escQ(subj.name)}',${gd})">${p.reason||'—'}</div>`;
+        html+=`<div class="praise-item"
+          onclick="openModal('${sid}','${pid}','${escQ(student.name)}','${escQ(subj.name)}',${gd})"
+          >${p.reason||'похвала'}</div>`;
       });
       remarks.forEach(([rid,r])=>{
         const gd=JSON.stringify(r).replace(/"/g,'&quot;');
-        html+=`<div class="remark-item" onclick="openModal('${sid}','${rid}','${escQ(student.name)}','${escQ(subj.name)}',${gd})">забележка${r.reason?': '+r.reason:''}</div>`;
+        html+=`<div class="remark-item"
+          onclick="openModal('${sid}','${rid}','${escQ(student.name)}','${escQ(subj.name)}',${gd})"
+          >${r.reason||'забележка'}</div>`;
       });
       html+='</td>';
     });
     html+='</tr>';
   });
+
   html+='</tbody></table></div>';
+
+  // Legend
+  html+=`<div class="diary-legend">
+    <span class="leg-item"><span class="leg-dot" style="background:#9fa8da;"></span>${prevSemName} — срочна</span>
+    <span class="leg-item"><span class="leg-dot" style="background:#5c6bc0;"></span>${currentSemesterName} — срочна</span>
+    <span class="leg-item" style="color:#1a7a40;"><span class="leg-dot" style="background:#27ae60;"></span>похвала</span>
+    <span class="leg-item" style="color:#a93226;"><span class="leg-dot" style="background:#e74c3c;"></span>забележка</span>
+  </div>`;
+
   c.innerHTML=html;
 }
 
@@ -647,7 +763,7 @@ function renderStats(){
   subArr.forEach(([sid,s])=>{
     const gs=subGrades[sid]||[];
     const avg=gs.length?gs.reduce((a,b)=>a+b,0)/gs.length:null;
-    const bg=avg?gradeColor(avg):'linear-gradient(135deg,#bbb,#999)';
+    const bg=avg?gradeGradient(avg):'linear-gradient(135deg,#bbb,#999)';
     html+=`<div class="stat-card" style="background:${bg}"><div class="val">${avg?avg.toFixed(2):'—'}</div><div class="lbl">${s.name}<br><span style="font-size:10px;opacity:.8;">${gs.length} оценки</span></div></div>`;
   });
   html+='</div>';
@@ -702,42 +818,63 @@ async function renderArchive(){
   c.innerHTML='<div class="info-msg">Зарежда...</div>';
   const snap=await get(ref(db,`users/${currentUser.uid}/archive`));
   const data=snap.val()||{};
-  if(!Object.keys(data).length){c.innerHTML='<div class="info-msg">Все още няма архивирани срокове.</div>';return;}
+  const entries=Object.entries(data).sort((a,b)=>b[1].archivedAt-a[1].archivedAt);
+  if(!entries.length){c.innerHTML='<div class="info-msg">Все още няма архивирани срокове.</div>';return;}
   let html='';
-  Object.entries(data).sort((a,b)=>b[1].archivedAt-a[1].archivedAt).forEach(([key,arc])=>{
+  entries.forEach(([key,arc])=>{
     const date=new Date(arc.archivedAt).toLocaleDateString('bg-BG');
     const sc=Object.keys(arc.students||{}).length;
     const subc=Object.keys(arc.subjects||{}).length;
-    html+=`<div class="archive-item">
-      <h3>${arc.label||key}</h3>
-      <div class="archive-meta">Архивиран на ${date} &bull; ${sc} ученика &bull; ${subc} предмета</div>
-      <button class="btn btn-small btn-ghost" onclick="toggleArcDetail('${key}')">Преглед</button>
+    html+=`<div class="archive-item" id="arcItem_${key}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+        <div>
+          <h3>${arc.label||key}</h3>
+          <div class="archive-meta">Архивиран на ${date} &bull; ${sc} ученика &bull; ${subc} предмета</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="btn btn-small btn-ghost" onclick="toggleArcDetail('${key}')">Преглед</button>
+          <button class="btn btn-small btn-danger" onclick="deleteArchive('${key}','${escQ(arc.label||key)}')">Изтрий</button>
+        </div>
+      </div>
       <div id="arcD_${key}" style="display:none;margin-top:14px;">${buildArcTable(arc)}</div>
     </div>`;
   });
   c.innerHTML=html;
 }
 
+window.deleteArchive=async(key,label)=>{
+  if(!confirm(`Изтриване на архивирания срок „${label}"?\nТова действие е необратимо.`)) return;
+  await remove(ref(db,`users/${currentUser.uid}/archive/${key}`));
+  const el=document.getElementById(`arcItem_${key}`);
+  if(el) el.remove();
+  // If archive container is now empty, show message
+  const c=document.getElementById('archiveContainer');
+  if(!c.querySelector('.archive-item'))
+    c.innerHTML='<div class="info-msg">Все още няма архивирани срокове.</div>';
+  toast(`Срок „${label}" е изтрит.`);
+};
+
 function buildArcTable(arc){
   const sts=arc.students||{},subs=arc.subjects||{},grs=arc.grades||{};
   const subArr=Object.entries(subs);
   if(!subArr.length) return '<em style="color:#aaa;font-size:13px;">Няма данни.</em>';
-  let html='<div style="overflow-x:auto;"><table class="diary-table"><thead><tr><th>Ученик</th>';
-  subArr.forEach(([,s])=>html+=`<th colspan="2" class="sub-header">${s.name}</th>`);
+  let html='<div style="overflow-x:auto;"><table class="diary-table"><thead><tr>';
+  html+=`<th style="min-width:150px;background:#5c6bc0;">Ученик</th>`;
+  subArr.forEach(([,s])=>html+=`<th colspan="2" class="dt-subject-th">${s.name}</th>`);
   html+='</tr><tr><th></th>';
-  subArr.forEach(()=>html+='<th>Оценки</th><th>Срочна</th>');
+  subArr.forEach(()=>html+=`<th class="dt-col-grades">Оценки</th><th class="dt-col-sem">Срочна</th>`);
   html+='</tr></thead><tbody>';
-  Object.entries(sts).forEach(([sid,st])=>{
+  Object.entries(sts).forEach(([sid,st],ri)=>{
     const sg=grs[sid]||{};
-    html+=`<tr><td class="sname">${st.name}</td>`;
+    html+=`<tr style="${ri%2===1?'background:#fafafe;':''}"><td class="sname">${st.name}</td>`;
     subArr.forEach(([subId])=>{
       const gs=Object.entries(sg).filter(([,g])=>g.subjectId===subId&&g.type==='grade');
       const sem=sg[`semgrade_${subId}`];
       html+='<td>';
       gs.forEach(([,g])=>html+=`<span class="grade-item" style="background:${gradeColor(g.value)}">${g.value.toFixed(2)}</span>`);
-      if(gs.length){const avg=gs.reduce((s,[,g])=>s+g.value,0)/gs.length;html+=`<div class="grade-avg">Ср:${avg.toFixed(2)}</div>`;}
+      if(gs.length){const avg=gs.reduce((s,[,g])=>s+g.value,0)/gs.length;html+=`<div class="grade-avg">Ср: ${avg.toFixed(2)}</div>`;}
       html+='</td>';
-      html+=`<td>${sem?`<span class="sem-badge" style="background:${gradeColor(sem.value)}">${Math.round(sem.value)}</span>`:'—'}</td>`;
+      html+=`<td>${sem?`<span class="sem-badge sem-cur" style="background:${gradeColor(sem.value)}">${Math.round(sem.value)}</span>`:'<span class="dt-empty">—</span>'}</td>`;
     });
     html+='</tr>';
   });
@@ -817,7 +954,7 @@ window.openModal=(sid,gid,studentName,subjectName,gradeData)=>{
     const displayVal=['semester_grade','prev_semester'].includes(gradeData.type)
       ? Math.round(gradeData.value)
       : gradeData.value.toFixed(2);
-    html+=`<div class="modal-field"><label>Оценка</label><div class="val"><span class="modal-grade-badge" style="background:${gradeColor(gradeData.value)}">${displayVal}</span></div></div>`;
+    html+=`<div class="modal-field"><label>Оценка</label><div class="val"><span class="modal-grade-badge" style="background:${gradeGradient(gradeData.value)}">${displayVal}</span></div></div>`;
   }
   if(gradeData.reason) html+=`<div class="modal-field"><label>Описание</label><div class="val">${gradeData.reason}</div></div>`;
   if(gradeData.fromSemester) html+=`<div class="modal-field"><label>От срок</label><div class="val">${gradeData.fromSemester}</div></div>`;
@@ -858,6 +995,72 @@ window.closeModal=()=>{document.getElementById('modalOverlay').classList.remove(
 document.getElementById('modalClose').addEventListener('click',closeModal);
 document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target.id==='modalOverlay')closeModal();});
 
+// ─── MIGRATION FROM OLD STRUCTURE ────────────────────────────────────────────
+// The original code stored data at users/{uid}/students, /subjects, /grades, /schedule
+// The new code uses users/{uid}/semester_1/students etc.
+// On first login with new code, copy old data into semester_1 automatically.
+async function migrateOldData(){
+  const uid=currentUser.uid;
+  // Check if migration already done
+  const doneSnap=await get(ref(db,`users/${uid}/_migrated`));
+  if(doneSnap.val()) return;
+
+  // Check if old-style data exists (students directly under users/{uid}/students)
+  const oldStudentsSnap=await get(ref(db,`users/${uid}/students`));
+  const oldSubjectsSnap=await get(ref(db,`users/${uid}/subjects`));
+  const oldGradesSnap=await get(ref(db,`users/${uid}/grades`));
+  const oldScheduleSnap=await get(ref(db,`users/${uid}/schedule`));
+
+  const hasOldData=oldStudentsSnap.val()||oldSubjectsSnap.val()||oldGradesSnap.val();
+  if(!hasOldData){
+    // No old data, just mark as done
+    await set(ref(db,`users/${uid}/_migrated`),true);
+    return;
+  }
+
+  // Copy old data into semester_1 (only if semester_1 is empty)
+  const sem1StudentsSnap=await get(ref(db,`users/${uid}/semester_1/students`));
+  if(!sem1StudentsSnap.val()){
+    // Migrate students
+    if(oldStudentsSnap.val())
+      await set(ref(db,`users/${uid}/semester_1/students`),oldStudentsSnap.val());
+    // Migrate subjects
+    if(oldSubjectsSnap.val())
+      await set(ref(db,`users/${uid}/semester_1/subjects`),oldSubjectsSnap.val());
+    // Migrate grades
+    if(oldGradesSnap.val())
+      await set(ref(db,`users/${uid}/semester_1/grades`),oldGradesSnap.val());
+    // Migrate schedule (old schedule was flat key-value, wrap it)
+    if(oldScheduleSnap.val()){
+      const oldSched=oldScheduleSnap.val();
+      // Old format had string values like "Математика", new expects {name:"Математика"}
+      // Detect format: if any value is a string, convert
+      const converted={};
+      Object.entries(oldSched).forEach(([k,v])=>{
+        if(typeof v==='string'){
+          converted[k]={name:v};
+        } else {
+          converted[k]=v;
+        }
+      });
+      // Try to reconstruct _days from keys
+      if(!converted._days){
+        const daySet=new Set();
+        Object.keys(converted).forEach(k=>{
+          const parts=k.split('-');
+          if(parts.length===2) daySet.add(parts[0]);
+        });
+        if(daySet.size) converted._days=[...daySet];
+      }
+      await set(ref(db,`users/${uid}/semester_1/schedule`),converted);
+    }
+    toast('Данните от стария дневник са заредени в 1-ви срок.');
+  }
+
+  // Mark migration done
+  await set(ref(db,`users/${uid}/_migrated`),true);
+}
+
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
 document.getElementById('loginBtn').addEventListener('click',async()=>{
   try{await signInWithEmailAndPassword(auth,document.getElementById('authEmail').value,document.getElementById('authPassword').value);}
@@ -882,6 +1085,10 @@ onAuthStateChanged(auth,async user=>{
     currentSemesterKey=kSnap.val()||'semester_1';
     currentSemesterName=nSnap.val()||'1-ви срок';
     document.getElementById('semesterBadge').textContent=currentSemesterName;
+
+    // ── MIGRATION: copy old flat-structure data into semester_1 if needed ──
+    await migrateOldData();
+
     loadData();
   } else {
     currentUser=null;
@@ -925,4 +1132,5 @@ function loadData(){
 </script>
 </body>
 </html>
+
 
